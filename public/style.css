@@ -24,6 +24,33 @@ header h1 {
   text-transform: uppercase;
 }
 
+.header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.sys-stats {
+  display: flex;
+  gap: 16px;
+}
+
+.sys-item {
+  font-size: 0.75rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sys-item span {
+  color: #aaaacc;
+  font-weight: 700;
+}
+
+.sys-warn span { color: #f0b800; }
+.sys-crit span { color: #f44336; }
+
 .score-status { font-size: 0.8rem; color: #888; }
 .score-status.ok  { color: #4caf50; }
 .score-status.err { color: #f44336; }

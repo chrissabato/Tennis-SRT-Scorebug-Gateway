@@ -283,6 +283,28 @@
       } else if (msg.type === 'score:error') {
         scoreStatusEl.textContent = 'Score API error — using cached data';
         scoreStatusEl.className = 'score-status err';
+      } else if (msg.type === 'sys:stats') {
+        const cpuEl   = document.getElementById('cpu-val');
+        const memEl   = document.getElementById('mem-val');
+        const gpuItem = document.getElementById('gpu-item');
+        const gpuEl   = document.getElementById('gpu-val');
+        const gmemItem= document.getElementById('gmem-item');
+        const gmemEl  = document.getElementById('gmem-val');
+
+        cpuEl.textContent = `${msg.cpu}%`;
+        memEl.textContent = `${msg.mem.usedMb}/${msg.mem.totalMb}MB (${msg.mem.percent}%)`;
+
+        cpuEl.closest('.sys-item').className = 'sys-item' + (msg.cpu > 90 ? ' sys-crit' : msg.cpu > 70 ? ' sys-warn' : '');
+        memEl.closest('.sys-item').className = 'sys-item' + (msg.mem.percent > 90 ? ' sys-crit' : msg.mem.percent > 70 ? ' sys-warn' : '');
+
+        if (msg.gpu) {
+          gpuItem.style.display = '';
+          gmemItem.style.display = '';
+          gpuEl.textContent = `${msg.gpu.gpuPercent}%`;
+          gmemEl.textContent = `${msg.gpu.memUsed}/${msg.gpu.memTotal}MB`;
+          gpuItem.className = 'sys-item' + (msg.gpu.gpuPercent > 90 ? ' sys-crit' : msg.gpu.gpuPercent > 70 ? ' sys-warn' : '');
+          gmemItem.className = 'sys-item' + ((msg.gpu.memUsed / msg.gpu.memTotal) > 0.9 ? ' sys-crit' : (msg.gpu.memUsed / msg.gpu.memTotal) > 0.7 ? ' sys-warn' : '');
+        }
       }
     });
   }

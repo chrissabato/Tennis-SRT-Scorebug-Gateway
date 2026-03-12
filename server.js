@@ -111,6 +111,60 @@ app.post('/api/stream/stop', (req, res) => {
   res.json({ ok: true, status: mgr.status });
 });
 
+// System resource monitor
+const { execSync } = require('child_process');
+let _prevCpu = null;
+
+function getCpuPercent() {
+  const stat = fs.readFileSync('/proc/stat', 'utf8').split('\n')[0].split(/\s+/).slice(1).map(Number);
+  const [user, nice, system, idle, iowait, irq, softirq] = stat;
+  const total = stat.reduce((a, b) => a + b, 0);
+  const used = total - idle - iowait;
+  if (!_prevCpu) { _prevCpu = { used, total }; return 0; }
+  const diffUsed = used - _prevCpu.used;
+  const diffTotal = total - _prevCpu.total;
+  _prevCpu = { used, total };
+  return diffTotal > 0 ? Math.round((diffUsed / diffTotal) * 100) : 0;
+}
+
+function getMemInfo() {
+  const lines = fs.readFileSync('/proc/meminfo', 'utf8').split('\n');
+  const val = (key) => {
+    const line = lines.find(l => l.startsWith(key));
+    return line ? parseInt(line.split(/\s+/)[1], 10) : 0;
+  };
+  const total = val('MemTotal:');
+  const available = val('MemAvailable:');
+  const used = total - available;
+  return {
+    totalMb: Math.round(total / 1024),
+    usedMb: Math.round(used / 1024),
+    percent: Math.round((used / total) * 100),
+  };
+}
+
+function getGpuInfo() {
+  try {
+    const out = execSync(
+      'nvidia-smi --query-gpu=utilization.gpu,memory.used,memory.total --format=csv,noheader,nounits',
+      { timeout: 2000 }
+    ).toString().trim();
+    const [gpuPercent, memUsed, memTotal] = out.split(',').map(s => parseInt(s.trim(), 10));
+    return { gpuPercent, memUsed, memTotal };
+  } catch (_) {
+    return null;
+  }
+}
+
+setInterval(() => {
+  broadcast({
+    type: 'sys:stats',
+    cpu: getCpuPercent(),
+    mem: getMemInfo(),
+    gpu: getGpuInfo(),
+  });
+}, 3000);
+
 // Graceful shutdown
 function shutdown() {
   console.log('\nShutting down...');

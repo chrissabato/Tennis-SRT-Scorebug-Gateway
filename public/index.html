@@ -9,7 +9,15 @@
 <body>
   <header>
     <h1>Tennis Restream Manager</h1>
-    <div id="score-status" class="score-status">Connecting...</div>
+    <div class="header-right">
+      <div id="sys-stats" class="sys-stats">
+        <span class="sys-item">CPU <span id="cpu-val">—</span></span>
+        <span class="sys-item">MEM <span id="mem-val">—</span></span>
+        <span class="sys-item" id="gpu-item" style="display:none">GPU <span id="gpu-val">—</span></span>
+        <span class="sys-item" id="gmem-item" style="display:none">GMEM <span id="gmem-val">—</span></span>
+      </div>
+      <div id="score-status" class="score-status">Connecting...</div>
+    </div>
   </header>
 
   <main class="grid" id="stream-grid">
