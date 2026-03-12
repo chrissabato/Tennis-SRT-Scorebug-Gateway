@@ -12,7 +12,7 @@
     panels.push(panel);
   }
 
-  function buildSrtUrl(host, port, mode, latency) {
+  function buildSrtUrl(host, port, mode, latency, streamid) {
     const h = host.trim();
     const p = port.trim();
     const m = mode || 'caller';
@@ -20,7 +20,8 @@
     const hostPart = m === 'listener' ? '' : h;
     const lat = parseInt(latency, 10);
     const latParam = lat > 0 ? `&latency=${lat}` : '';
-    return `srt://${hostPart}:${p}?mode=${m}${latParam}`;
+    const sidParam = streamid.trim() ? `&streamid=${encodeURIComponent(streamid.trim())}` : '';
+    return `srt://${hostPart}:${p}?mode=${m}${latParam}${sidParam}`;
   }
 
   function save(key, val) { localStorage.setItem(key, val); }
@@ -58,6 +59,10 @@
             <label>Latency (ms)</label>
             <input type="number" id="in-latency-${i}" placeholder="120" min="0" max="10000">
           </div>
+          <div class="field-group field-streamid">
+            <label>Stream ID</label>
+            <input type="text" id="in-streamid-${i}" placeholder="optional" autocomplete="off" spellcheck="false">
+          </div>
         </div>
       </div>
 
@@ -83,6 +88,10 @@
             <label>Latency (ms)</label>
             <input type="number" id="out-latency-${i}" placeholder="120" min="0" max="10000">
           </div>
+          <div class="field-group field-streamid">
+            <label>Stream ID</label>
+            <input type="text" id="out-streamid-${i}" placeholder="optional" autocomplete="off" spellcheck="false">
+          </div>
         </div>
       </div>
 
@@ -96,35 +105,41 @@
     `;
 
     const fields = {
-      inHost:    el.querySelector(`#in-host-${i}`),
-      inPort:    el.querySelector(`#in-port-${i}`),
-      inMode:    el.querySelector(`#in-mode-${i}`),
-      inLatency: el.querySelector(`#in-latency-${i}`),
-      outHost:   el.querySelector(`#out-host-${i}`),
-      outPort:   el.querySelector(`#out-port-${i}`),
-      outMode:   el.querySelector(`#out-mode-${i}`),
-      outLatency:el.querySelector(`#out-latency-${i}`),
+      inHost:     el.querySelector(`#in-host-${i}`),
+      inPort:     el.querySelector(`#in-port-${i}`),
+      inMode:     el.querySelector(`#in-mode-${i}`),
+      inLatency:  el.querySelector(`#in-latency-${i}`),
+      inStreamid: el.querySelector(`#in-streamid-${i}`),
+      outHost:    el.querySelector(`#out-host-${i}`),
+      outPort:    el.querySelector(`#out-port-${i}`),
+      outMode:    el.querySelector(`#out-mode-${i}`),
+      outLatency: el.querySelector(`#out-latency-${i}`),
+      outStreamid:el.querySelector(`#out-streamid-${i}`),
     };
 
     // Restore
-    fields.inHost.value    = load(`s${i}-in-host`);
-    fields.inPort.value    = load(`s${i}-in-port`);
-    fields.inMode.value    = load(`s${i}-in-mode`, 'listener');
-    fields.inLatency.value = load(`s${i}-in-latency`);
-    fields.outHost.value   = load(`s${i}-out-host`);
-    fields.outPort.value   = load(`s${i}-out-port`);
-    fields.outMode.value   = load(`s${i}-out-mode`, 'caller');
-    fields.outLatency.value= load(`s${i}-out-latency`);
+    fields.inHost.value      = load(`s${i}-in-host`);
+    fields.inPort.value      = load(`s${i}-in-port`);
+    fields.inMode.value      = load(`s${i}-in-mode`, 'listener');
+    fields.inLatency.value   = load(`s${i}-in-latency`);
+    fields.inStreamid.value  = load(`s${i}-in-streamid`);
+    fields.outHost.value     = load(`s${i}-out-host`);
+    fields.outPort.value     = load(`s${i}-out-port`);
+    fields.outMode.value     = load(`s${i}-out-mode`, 'caller');
+    fields.outLatency.value  = load(`s${i}-out-latency`);
+    fields.outStreamid.value = load(`s${i}-out-streamid`);
 
     // Persist
-    fields.inHost.addEventListener('input',    () => save(`s${i}-in-host`,     fields.inHost.value));
-    fields.inPort.addEventListener('input',    () => save(`s${i}-in-port`,     fields.inPort.value));
-    fields.inMode.addEventListener('change',   () => save(`s${i}-in-mode`,     fields.inMode.value));
-    fields.inLatency.addEventListener('input', () => save(`s${i}-in-latency`,  fields.inLatency.value));
-    fields.outHost.addEventListener('input',   () => save(`s${i}-out-host`,    fields.outHost.value));
-    fields.outPort.addEventListener('input',   () => save(`s${i}-out-port`,    fields.outPort.value));
-    fields.outMode.addEventListener('change',  () => save(`s${i}-out-mode`,    fields.outMode.value));
-    fields.outLatency.addEventListener('input',() => save(`s${i}-out-latency`, fields.outLatency.value));
+    fields.inHost.addEventListener('input',      () => save(`s${i}-in-host`,      fields.inHost.value));
+    fields.inPort.addEventListener('input',      () => save(`s${i}-in-port`,      fields.inPort.value));
+    fields.inMode.addEventListener('change',     () => save(`s${i}-in-mode`,      fields.inMode.value));
+    fields.inLatency.addEventListener('input',   () => save(`s${i}-in-latency`,   fields.inLatency.value));
+    fields.inStreamid.addEventListener('input',  () => save(`s${i}-in-streamid`,  fields.inStreamid.value));
+    fields.outHost.addEventListener('input',     () => save(`s${i}-out-host`,     fields.outHost.value));
+    fields.outPort.addEventListener('input',     () => save(`s${i}-out-port`,     fields.outPort.value));
+    fields.outMode.addEventListener('change',    () => save(`s${i}-out-mode`,     fields.outMode.value));
+    fields.outLatency.addEventListener('input',  () => save(`s${i}-out-latency`,  fields.outLatency.value));
+    fields.outStreamid.addEventListener('input', () => save(`s${i}-out-streamid`, fields.outStreamid.value));
 
     const startBtn = el.querySelector(`#start-${i}`);
     const stopBtn  = el.querySelector(`#stop-${i}`);
@@ -203,9 +218,9 @@
 
   async function startStream(i) {
     const p = panels[i];
-    const { inHost, inPort, inMode, inLatency, outHost, outPort, outMode, outLatency } = p.fields;
-    const srtInput  = buildSrtUrl(inHost.value,  inPort.value,  inMode.value,  inLatency.value);
-    const srtOutput = buildSrtUrl(outHost.value, outPort.value, outMode.value, outLatency.value);
+    const { inHost, inPort, inMode, inLatency, inStreamid, outHost, outPort, outMode, outLatency, outStreamid } = p.fields;
+    const srtInput  = buildSrtUrl(inHost.value,  inPort.value,  inMode.value,  inLatency.value,  inStreamid.value);
+    const srtOutput = buildSrtUrl(outHost.value, outPort.value, outMode.value, outLatency.value, outStreamid.value);
     if (!srtInput || !srtOutput) {
       alert('Please enter a port for both Ingest and Output.');
       return;

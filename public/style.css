@@ -148,7 +148,8 @@ header h1 {
 .field-host    { flex: 3; }
 .field-port    { flex: 2; }
 .field-mode    { flex: 2; }
-.field-latency { flex: 2; }
+.field-latency  { flex: 2; }
+.field-streamid { flex: 3; }
 
 select {
   background: #0d0d1a;
