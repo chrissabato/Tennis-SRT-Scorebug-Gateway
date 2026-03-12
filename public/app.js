@@ -40,26 +40,28 @@
       <div class="srt-group">
         <div class="srt-group-label">Ingest</div>
         <div class="srt-row">
-          <div class="field-group field-host">
+          <div class="field-group">
             <label>Host / IP</label>
             <input type="text" id="in-host-${i}" placeholder="(any)" autocomplete="off" spellcheck="false">
           </div>
-          <div class="field-group field-port">
+          <div class="field-group">
             <label>Port</label>
             <input type="text" id="in-port-${i}" placeholder="5000" autocomplete="off" spellcheck="false">
           </div>
-          <div class="field-group field-mode">
+          <div class="field-group">
             <label>Mode</label>
             <select id="in-mode-${i}">
               <option value="listener">Listener</option>
               <option value="caller">Caller</option>
             </select>
           </div>
-          <div class="field-group field-latency">
+        </div>
+        <div class="srt-row-2">
+          <div class="field-group">
             <label>Latency (ms)</label>
             <input type="number" id="in-latency-${i}" placeholder="120" min="0" max="10000">
           </div>
-          <div class="field-group field-streamid">
+          <div class="field-group">
             <label>Stream ID</label>
             <input type="text" id="in-streamid-${i}" placeholder="optional" autocomplete="off" spellcheck="false">
           </div>
@@ -69,26 +71,28 @@
       <div class="srt-group">
         <div class="srt-group-label">Output</div>
         <div class="srt-row">
-          <div class="field-group field-host">
+          <div class="field-group">
             <label>Host / IP</label>
             <input type="text" id="out-host-${i}" placeholder="host" autocomplete="off" spellcheck="false">
           </div>
-          <div class="field-group field-port">
+          <div class="field-group">
             <label>Port</label>
             <input type="text" id="out-port-${i}" placeholder="5001" autocomplete="off" spellcheck="false">
           </div>
-          <div class="field-group field-mode">
+          <div class="field-group">
             <label>Mode</label>
             <select id="out-mode-${i}">
               <option value="caller">Caller</option>
               <option value="listener">Listener</option>
             </select>
           </div>
-          <div class="field-group field-latency">
+        </div>
+        <div class="srt-row-2">
+          <div class="field-group">
             <label>Latency (ms)</label>
             <input type="number" id="out-latency-${i}" placeholder="120" min="0" max="10000">
           </div>
-          <div class="field-group field-streamid">
+          <div class="field-group">
             <label>Stream ID</label>
             <input type="text" id="out-streamid-${i}" placeholder="optional" autocomplete="off" spellcheck="false">
           </div>
