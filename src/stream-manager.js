@@ -39,7 +39,7 @@ class StreamManager {
       '-i', srtInput,
       '-f', 'mjpeg', '-framerate', '1', '-i', this.fifoPath,
       '-filter_complex', '[0:v][1:v]overlay=x=20:y=H-h-20:format=auto',
-      '-c:v', 'libx264', '-preset', 'ultrafast', '-tune', 'zerolatency', '-threads', '1',
+      '-c:v', 'h264_nvenc', '-preset', 'p1', '-tune', 'ull',
       '-c:a', 'copy',
       '-f', 'mpegts', srtOutput,
     ];
