@@ -186,6 +186,10 @@
     p.stopBtn.disabled = isIdle;
     p.allInputs.forEach(el => el.disabled = isLive);
 
+    // Show/hide config fields
+    const configEls = p.el.querySelectorAll('.srt-group');
+    configEls.forEach(el => el.style.display = isLive ? 'none' : '');
+
     if (status === 'live') {
       p.scorebugImg.style.display = 'block';
       if (!p._bugTimer) {
