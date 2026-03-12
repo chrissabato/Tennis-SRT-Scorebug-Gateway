@@ -106,6 +106,8 @@ class StreamManager {
       if (err.code === 'EPIPE') {
         this._setStatus('error', 'FIFO write EPIPE — pipe broken');
         this._cleanup();
+      } else if (err.code === 'EAGAIN') {
+        // FFmpeg not reading — stalled, skip frame silently
       } else {
         console.error(`[StreamManager ${this.matchIndex}] fetch error:`, err.message);
       }
