@@ -5,6 +5,16 @@
   const grid = document.getElementById('stream-grid');
   const scoreStatusEl = document.getElementById('score-status');
 
+  const DEFAULT_BUG_URL = 'https://tennisbeta.chrissabato.com/broadcast/scorebug.php?court={court}';
+  const scorebugUrlEl = document.getElementById('scorebug-url');
+  scorebugUrlEl.value = load('scorebug-url', DEFAULT_BUG_URL);
+  scorebugUrlEl.addEventListener('input', () => save('scorebug-url', scorebugUrlEl.value));
+
+  function getBugUrl(courtNumber) {
+    const tpl = scorebugUrlEl.value.trim() || DEFAULT_BUG_URL;
+    return tpl.replace('{court}', courtNumber);
+  }
+
   const panels = [];
   for (let i = 0; i < NUM_STREAMS; i++) {
     const panel = buildPanel(i);
@@ -194,7 +204,7 @@
       p.scorebugImg.style.display = 'block';
       if (!p._bugTimer) {
         const refresh = () => {
-          p.scorebugImg.src = `https://tennisbeta.chrissabato.com/broadcast/scorebug.php?court=${p.courtNumber}&_=${Date.now()}`;
+          p.scorebugImg.src = getBugUrl(p.courtNumber) + `&_=${Date.now()}`;
         };
         refresh();
         p._bugTimer = setInterval(refresh, 2000);
@@ -237,7 +247,7 @@
       const res = await fetch('/api/stream/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ matchIndex: i, srtInput, srtOutput }),
+        body: JSON.stringify({ matchIndex: i, srtInput, srtOutput, bugUrl: getBugUrl(i + 1) }),
       });
       const data = await res.json();
       if (!res.ok) alert(data.error || 'Failed to start stream');

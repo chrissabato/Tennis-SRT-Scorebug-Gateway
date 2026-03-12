@@ -12,6 +12,7 @@ class StreamManager {
     this.courtNumber = matchIndex + 1;
     this.bugUrl = `https://tennisbeta.chrissabato.com/broadcast/scorebug.php?court=${this.courtNumber}`;
 
+
     this.status = 'idle';
     this.error = null;
     this.stderrTail = '';
@@ -21,7 +22,8 @@ class StreamManager {
     this._renderTimer = null;
   }
 
-  async start(srtInput, srtOutput) {
+  async start(srtInput, srtOutput, bugUrl) {
+    if (bugUrl) this.bugUrl = bugUrl;
     if (this.status === 'live' || this.status === 'starting') return;
 
     this._setStatus('starting');
