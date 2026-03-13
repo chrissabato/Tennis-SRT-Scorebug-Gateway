@@ -46,6 +46,7 @@ function onStreamStatusChange(matchIndex, status, error) {
     type: 'stream:status',
     matchIndex,
     status,
+    signal: mgr ? mgr.signal : false,
     error,
     stderrTail: mgr ? mgr.stderrTail : '',
   });
@@ -55,10 +56,7 @@ function onStreamStatusChange(matchIndex, status, error) {
 wss.on('connection', (ws) => {
   // Send current stream statuses
   for (const [, mgr] of streams) {
-    ws.send(JSON.stringify({
-      type: 'stream:status',
-      ...mgr.getState(),
-    }));
+    ws.send(JSON.stringify({ type: 'stream:status', ...mgr.getState() }));
   }
 
   // Send latest score data if available

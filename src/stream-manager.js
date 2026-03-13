@@ -12,14 +12,16 @@ class StreamManager {
     this.courtNumber = matchIndex + 1;
     this.bugUrl = `https://tennisbeta.chrissabato.com/broadcast/scorebug.php?court=${this.courtNumber}`;
 
-
     this.status = 'idle';
+    this.signal = false;   // true = actively receiving frames
     this.error = null;
     this.stderrTail = '';
 
     this._ffmpeg = null;
     this._fifoFd = null;
     this._renderTimer = null;
+    this._lastFrame = 0;
+    this._signalCheckTimer = null;
   }
 
   async start(srtInput, srtOutput, bugUrl) {
@@ -29,6 +31,7 @@ class StreamManager {
     this._setStatus('starting');
     this.error = null;
     this.stderrTail = '';
+    this._lastFrame = 0;
 
     try {
       this._setupFifo();
@@ -43,10 +46,23 @@ class StreamManager {
       '-filter_complex', '[0:v][1:v]overlay=x=20:y=H-h-20:format=auto',
       '-c:v', 'h264_nvenc', '-preset', 'p1', '-tune', 'ull',
       '-c:a', 'copy',
+      '-progress', 'pipe:1',
       '-f', 'mpegts', srtOutput,
     ];
 
     this._ffmpeg = spawn('ffmpeg', args);
+
+    // Parse progress from stdout
+    let progressBuf = '';
+    this._ffmpeg.stdout.on('data', (chunk) => {
+      progressBuf += chunk.toString();
+      const lines = progressBuf.split('\n');
+      progressBuf = lines.pop();
+      for (const line of lines) {
+        const m = line.match(/^frame=(\d+)/);
+        if (m) this._lastFrame = parseInt(m[1], 10);
+      }
+    });
 
     this._ffmpeg.stderr.on('data', (chunk) => {
       this.stderrTail += chunk.toString();
@@ -58,6 +74,17 @@ class StreamManager {
     this._ffmpeg.on('spawn', () => {
       this._setStatus('live');
       this._renderTimer = setInterval(() => this._fetchAndWrite(), 1000);
+
+      // Check every 3s if frame count is advancing
+      let prevFrame = 0;
+      this._signalCheckTimer = setInterval(() => {
+        const hasSignal = this._lastFrame > prevFrame;
+        prevFrame = this._lastFrame;
+        if (hasSignal !== this.signal) {
+          this.signal = hasSignal;
+          this._notifySignal();
+        }
+      }, 3000);
     });
 
     this._ffmpeg.on('error', (err) => {
@@ -75,17 +102,18 @@ class StreamManager {
 
   stop() {
     if (this.status === 'idle') return;
+    this.signal = false;
     this._setStatus('idle');
     this._cleanup();
   }
 
-  // kept for API compatibility with server.js
   updateMatchData(data) {}
 
   getState() {
     return {
       matchIndex: this.matchIndex,
       status: this.status,
+      signal: this.signal,
       error: this.error,
       stderrTail: this.stderrTail,
     };
@@ -117,18 +145,14 @@ class StreamManager {
   }
 
   _cleanup() {
-    if (this._renderTimer) {
-      clearInterval(this._renderTimer);
-      this._renderTimer = null;
-    }
+    if (this._renderTimer) { clearInterval(this._renderTimer); this._renderTimer = null; }
+    if (this._signalCheckTimer) { clearInterval(this._signalCheckTimer); this._signalCheckTimer = null; }
 
     if (this._ffmpeg) {
       const proc = this._ffmpeg;
       this._ffmpeg = null;
       try { proc.kill('SIGTERM'); } catch (_) {}
-      setTimeout(() => {
-        try { proc.kill('SIGKILL'); } catch (_) {}
-      }, 3000);
+      setTimeout(() => { try { proc.kill('SIGKILL'); } catch (_) {} }, 3000);
     }
 
     if (this._fifoFd !== null) {
@@ -144,6 +168,12 @@ class StreamManager {
     this.error = error;
     if (this.onStatusChange) {
       this.onStatusChange(this.matchIndex, status, error);
+    }
+  }
+
+  _notifySignal() {
+    if (this.onStatusChange) {
+      this.onStatusChange(this.matchIndex, this.status, this.error);
     }
   }
 }

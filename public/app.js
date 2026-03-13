@@ -178,7 +178,7 @@
     return panel;
   }
 
-  function applyStatus(i, status, error, stderrTail) {
+  function applyStatus(i, status, signal, error, stderrTail) {
     const p = panels[i];
     if (!p) return;
 
@@ -191,7 +191,7 @@
     const [cls, label] = badgeMap[status] || badgeMap.idle;
     p.badge.className = 'badge ' + cls;
     p.badge.childNodes[1].textContent = label;
-    p.signalDot.className = 'signal-dot' + (status === 'live' ? ' signal-ok' : status === 'error' ? ' signal-err' : '');
+    p.signalDot.className = 'signal-dot' + (signal ? ' signal-ok' : status === 'live' ? ' signal-none' : status === 'error' ? ' signal-err' : '');
 
     const isLive = status === 'live' || status === 'starting';
     const isIdle = status === 'idle';
@@ -297,7 +297,7 @@
       if (msg.type === 'score:data') {
         applyScoreData(msg.matches);
       } else if (msg.type === 'stream:status') {
-        applyStatus(msg.matchIndex, msg.status, msg.error, msg.stderrTail);
+        applyStatus(msg.matchIndex, msg.status, msg.signal, msg.error, msg.stderrTail);
       } else if (msg.type === 'score:error') {
         scoreStatusEl.textContent = 'Score API error — using cached data';
         scoreStatusEl.className = 'score-status err';
