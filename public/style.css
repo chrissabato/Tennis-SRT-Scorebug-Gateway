@@ -189,9 +189,6 @@ select { cursor: pointer; }
   letter-spacing: 0.06em;
   border-bottom: 1px solid #1e1e3a;
   padding-bottom: 4px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
 }
 
 .signal-dot {

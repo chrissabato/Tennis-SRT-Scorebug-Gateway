@@ -43,12 +43,13 @@
     el.innerHTML = `
       <div class="panel-header">
         <span class="panel-title">Court ${i + 1}</span>
+        <span class="signal-dot" id="signal-${i}" title="No signal"></span>
         <span class="badge badge-idle" id="badge-${i}">Idle</span>
       </div>
       <div class="match-preview" id="preview-${i}">—</div>
 
       <div class="srt-group">
-        <div class="srt-group-label">Ingest <span class="signal-dot" id="signal-${i}" title="No signal"></span></div>
+        <div class="srt-group-label">Ingest</div>
         <div class="srt-row">
           <div class="field-group">
             <label>Host / IP</label>
@@ -165,7 +166,7 @@
       badge:         el.querySelector(`#badge-${i}`),
       preview:       el.querySelector(`#preview-${i}`),
       scorebugImg:   el.querySelector(`#scorebug-${i}`),
-      signalDot:     el.querySelector(`#signal-${i}`),
+      signalDot:     el.querySelector(`#signal-${i}`),  // in header, always visible
       fields,
       startBtn,
       stopBtn,
