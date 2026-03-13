@@ -17,7 +17,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
-// Clean up stale FIFOs on startup
+// Kill orphaned FFmpeg processes and clean up stale FIFOs on startup
+const { execSync: _execSync } = require('child_process');
+try { _execSync('pkill -f "ffmpeg.*tennis-scorebug" 2>/dev/null', { stdio: 'ignore' }); } catch (_) {}
 for (let i = 0; i < NUM_STREAMS; i++) {
   try { fs.unlinkSync(`/tmp/tennis-scorebug-${i}.fifo`); } catch (_) {}
 }

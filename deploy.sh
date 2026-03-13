@@ -44,7 +44,7 @@ ufw --force enable
 echo "--- Starting app with PM2..."
 cd "$APP_DIR"
 pm2 delete tennis-gateway 2>/dev/null || true
-pm2 start server.js --name tennis-gateway
+pm2 start ecosystem.config.js
 pm2 save
 pm2 startup systemd -u root --hp /root | tail -1 | bash
 
