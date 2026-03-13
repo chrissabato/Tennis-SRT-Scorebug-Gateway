@@ -179,3 +179,14 @@ poller.start();
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`Tennis Restream Manager running at http://localhost:${PORT}`);
 });
+
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`Port ${PORT} already in use — killing stale process and retrying...`);
+    const { execSync } = require('child_process');
+    try { execSync(`fuser -k ${PORT}/tcp`); } catch (_) {}
+    setTimeout(() => server.listen(PORT, '0.0.0.0'), 1000);
+  } else {
+    throw err;
+  }
+});

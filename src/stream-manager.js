@@ -206,7 +206,7 @@ class StreamManager {
 
     this._slateFfmpeg.on('close', (code) => {
       if (this.status === 'slate') {
-        console.log(`[StreamManager ${this.matchIndex}] Slate FFmpeg exited (code ${code}), restarting in 500ms`);
+        console.error(`[StreamManager ${this.matchIndex}] Slate FFmpeg exited (code ${code}): ${this.stderrTail.slice(-300)}`);
         this._slateFfmpeg = null;
         setTimeout(() => {
           if (this.status === 'slate') this._startSlate();
