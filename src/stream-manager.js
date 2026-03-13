@@ -28,6 +28,7 @@ class StreamManager {
     this._lastFrame = 0;
     this._signalCheckTimer = null;
     this._reconnectTimer = null;
+    this._startupTimer = null;
     this._srtInput = null;
     this._srtOutput = null;
   }
@@ -66,6 +67,14 @@ class StreamManager {
     ];
 
     this._ffmpeg = spawn('ffmpeg', args);
+
+    // If no frames within 10s of spawn, switch to slate
+    this._startupTimer = setTimeout(() => {
+      this._startupTimer = null;
+      if (this.status === 'live' && this._lastFrame === 0) {
+        this._switchToSlate('No frames received within 10s of startup');
+      }
+    }, 10000);
 
     // Parse frame count from stderr stats line: "frame= 123 fps=..."
     this._ffmpeg.stderr.on('data', (chunk) => {
@@ -226,6 +235,7 @@ class StreamManager {
   }
 
   _cleanupMain() {
+    if (this._startupTimer) { clearTimeout(this._startupTimer); this._startupTimer = null; }
     if (this._renderTimer) { clearInterval(this._renderTimer); this._renderTimer = null; }
     if (this._signalCheckTimer) { clearInterval(this._signalCheckTimer); this._signalCheckTimer = null; }
 
