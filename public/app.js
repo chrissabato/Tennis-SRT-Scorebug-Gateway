@@ -48,7 +48,7 @@
       <div class="match-preview" id="preview-${i}">—</div>
 
       <div class="srt-group">
-        <div class="srt-group-label">Ingest</div>
+        <div class="srt-group-label">Ingest <span class="signal-dot" id="signal-${i}" title="No signal"></span></div>
         <div class="srt-row">
           <div class="field-group">
             <label>Host / IP</label>
@@ -160,11 +160,12 @@
     startBtn.addEventListener('click', () => startStream(i));
     stopBtn.addEventListener('click',  () => stopStream(i));
 
-    return {
+    const panel = {
       el,
       badge:         el.querySelector(`#badge-${i}`),
       preview:       el.querySelector(`#preview-${i}`),
       scorebugImg:   el.querySelector(`#scorebug-${i}`),
+      signalDot:     el.querySelector(`#signal-${i}`),
       fields,
       startBtn,
       stopBtn,
@@ -172,7 +173,27 @@
       allInputs:     Object.values(fields),
       courtNumber:   i + 1,
       _bugTimer:     null,
+      _probeTimer:   null,
     };
+
+    // Start signal probing
+    async function probe() {
+      const { inHost, inPort, inMode, inLatency, inStreamid } = panel.fields;
+      const url = buildSrtUrl(inHost.value, inPort.value, inMode.value, inLatency.value, inStreamid.value);
+      if (!url) { panel.signalDot.className = 'signal-dot'; return; }
+      try {
+        const r = await fetch(`/api/stream/probe?srtUrl=${encodeURIComponent(url)}`);
+        const d = await r.json();
+        panel.signalDot.className = 'signal-dot ' + (d.signal ? 'signal-ok' : 'signal-none');
+        panel.signalDot.title = d.signal ? 'Signal detected' : 'No signal';
+      } catch (_) {
+        panel.signalDot.className = 'signal-dot';
+      }
+    }
+    probe();
+    panel._probeTimer = setInterval(probe, 5000);
+
+    return panel;
   }
 
   function applyStatus(i, status, error, stderrTail) {

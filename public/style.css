@@ -189,7 +189,22 @@ select { cursor: pointer; }
   letter-spacing: 0.06em;
   border-bottom: 1px solid #1e1e3a;
   padding-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
+
+.signal-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #333;
+  flex-shrink: 0;
+}
+
+.signal-dot.signal-ok   { background: #4caf50; box-shadow: 0 0 4px #4caf50; }
+.signal-dot.signal-none { background: #f44336; }
 
 .srt-row {
   display: grid;
