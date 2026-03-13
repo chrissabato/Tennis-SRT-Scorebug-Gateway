@@ -72,6 +72,7 @@ class StreamManager {
     this._startupTimer = setTimeout(() => {
       this._startupTimer = null;
       if (this.status === 'live' && this._lastFrame === 0) {
+        console.error(`[StreamManager ${this.matchIndex}] No frames in 10s, stderr: ${this.stderrTail.slice(-500)}`);
         this._switchToSlate('No frames received within 10s of startup');
       }
     }, 10000);
