@@ -156,12 +156,14 @@ function getGpuInfo() {
 }
 
 setInterval(() => {
-  broadcast({
-    type: 'sys:stats',
-    cpu: getCpuPercent(),
-    mem: getMemInfo(),
-    gpu: getGpuInfo(),
-  });
+  try {
+    broadcast({
+      type: 'sys:stats',
+      cpu: getCpuPercent(),
+      mem: getMemInfo(),
+      gpu: getGpuInfo(),
+    });
+  } catch (_) {}
 }, 3000);
 
 // Graceful shutdown
