@@ -2,7 +2,8 @@
 set -e
 
 echo "--- Killing FFmpeg processes..."
-pkill -f ffmpeg 2>/dev/null || true
+pkill -9 -f ffmpeg 2>/dev/null || true
+sleep 1
 
 echo "--- Pulling latest..."
 git -C "$(dirname "$0")" pull
