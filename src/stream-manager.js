@@ -68,14 +68,14 @@ class StreamManager {
 
     this._ffmpeg = spawn('ffmpeg', args);
 
-    // If no frames within 10s of spawn, switch to slate
+    // If no frames within 60s of spawn, switch to slate
     this._startupTimer = setTimeout(() => {
       this._startupTimer = null;
       if (this.status === 'live' && this._lastFrame === 0) {
-        console.error(`[StreamManager ${this.matchIndex}] No frames in 10s, stderr: ${this.stderrTail.slice(-500)}`);
-        this._switchToSlate('No frames received within 10s of startup');
+        console.error(`[StreamManager ${this.matchIndex}] No frames in 60s, stderr: ${this.stderrTail.slice(-500)}`);
+        this._switchToSlate('No frames received within 60s of startup');
       }
-    }, 10000);
+    }, 60000);
 
     // Parse frame count from stderr stats line: "frame= 123 fps=..."
     this._ffmpeg.stderr.on('data', (chunk) => {
@@ -174,8 +174,8 @@ class StreamManager {
   _switchToSlate(reason) {
     this._cleanupMain();
     this._setStatus('slate');
-    // Delay slate start so main FFmpeg fully releases the SRT output connection
-    setTimeout(() => this._startSlate(reason), 2000);
+    // Delay slate start so main FFmpeg fully releases the SRT output port
+    setTimeout(() => this._startSlate(reason), 5000);
     this._scheduleReconnect();
   }
 
