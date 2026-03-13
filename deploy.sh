@@ -47,7 +47,12 @@ cd "$APP_DIR"
 pm2 delete tennis-gateway 2>/dev/null || true
 pm2 start ecosystem.config.js
 pm2 save
-pm2 startup systemd -u root --hp /root | tail -1 | bash
+
+# Register PM2 to start on boot via systemd
+echo "--- Registering PM2 with systemd..."
+pm2 startup systemd -u root --hp /root --no-daemon
+systemctl enable pm2-root
+systemctl start pm2-root
 
 IP=$(curl -s https://api.ipify.org)
 echo ""
