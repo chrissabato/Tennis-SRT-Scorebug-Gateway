@@ -46,26 +46,17 @@ class StreamManager {
       '-filter_complex', '[0:v][1:v]overlay=x=20:y=H-h-20:format=auto',
       '-c:v', 'h264_nvenc', '-preset', 'p1', '-tune', 'ull',
       '-c:a', 'copy',
-      '-progress', 'pipe:1',
       '-f', 'mpegts', srtOutput,
     ];
 
     this._ffmpeg = spawn('ffmpeg', args);
 
-    // Parse progress from stdout
-    let progressBuf = '';
-    this._ffmpeg.stdout.on('data', (chunk) => {
-      progressBuf += chunk.toString();
-      const lines = progressBuf.split('\n');
-      progressBuf = lines.pop();
-      for (const line of lines) {
-        const m = line.match(/^frame=(\d+)/);
-        if (m) this._lastFrame = parseInt(m[1], 10);
-      }
-    });
-
+    // Parse frame count from stderr stats line: "frame= 123 fps=..."
     this._ffmpeg.stderr.on('data', (chunk) => {
-      this.stderrTail += chunk.toString();
+      const text = chunk.toString();
+      const m = text.match(/frame=\s*(\d+)/);
+      if (m) this._lastFrame = parseInt(m[1], 10);
+      this.stderrTail += text;
       if (this.stderrTail.length > 2048) {
         this.stderrTail = this.stderrTail.slice(-2048);
       }
