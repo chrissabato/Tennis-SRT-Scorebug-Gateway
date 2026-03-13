@@ -193,15 +193,17 @@ select { cursor: pointer; }
 
 .signal-dot {
   display: inline-block;
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  background: #333;
+  background: rgba(255,255,255,0.2);
+  margin-right: 5px;
+  vertical-align: middle;
   flex-shrink: 0;
 }
 
-.signal-dot.signal-ok   { background: #4caf50; box-shadow: 0 0 4px #4caf50; }
-.signal-dot.signal-none { background: #f44336; }
+.signal-dot.signal-ok  { background: #4caf50; box-shadow: 0 0 5px #4caf50; }
+.signal-dot.signal-err { background: #f44336; }
 
 .srt-row {
   display: grid;

@@ -98,34 +98,6 @@ app.post('/api/stream/start', async (req, res) => {
   res.json({ ok: true, status: mgr.status });
 });
 
-app.get('/api/stream/probe', (req, res) => {
-  const { srtUrl } = req.query;
-  if (!srtUrl) return res.json({ signal: false });
-
-  const { spawn } = require('child_process');
-  const proc = spawn('ffprobe', [
-    '-v', 'error',
-    '-timeout', '3000000',  // 3s in microseconds
-    '-i', srtUrl,
-    '-show_entries', 'stream=codec_type',
-    '-of', 'csv=p=0',
-  ]);
-
-  let found = false;
-  proc.stdout.on('data', () => { found = true; });
-
-  const timer = setTimeout(() => { try { proc.kill(); } catch (_) {} }, 4000);
-
-  proc.on('close', () => {
-    clearTimeout(timer);
-    res.json({ signal: found });
-  });
-
-  proc.on('error', () => {
-    clearTimeout(timer);
-    res.json({ signal: false });
-  });
-});
 
 app.post('/api/stream/stop', (req, res) => {
   const { matchIndex } = req.body;

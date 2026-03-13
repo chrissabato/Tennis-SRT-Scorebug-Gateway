@@ -43,8 +43,7 @@
     el.innerHTML = `
       <div class="panel-header">
         <span class="panel-title">Court ${i + 1}</span>
-        <span class="signal-dot" id="signal-${i}" title="No signal"></span>
-        <span class="badge badge-idle" id="badge-${i}">Idle</span>
+        <span class="badge badge-idle" id="badge-${i}"><span class="signal-dot" id="signal-${i}"></span>Idle</span>
       </div>
       <div class="match-preview" id="preview-${i}">—</div>
 
@@ -166,7 +165,7 @@
       badge:         el.querySelector(`#badge-${i}`),
       preview:       el.querySelector(`#preview-${i}`),
       scorebugImg:   el.querySelector(`#scorebug-${i}`),
-      signalDot:     el.querySelector(`#signal-${i}`),  // in header, always visible
+      signalDot:     el.querySelector(`#signal-${i}`),
       fields,
       startBtn,
       stopBtn,
@@ -174,25 +173,7 @@
       allInputs:     Object.values(fields),
       courtNumber:   i + 1,
       _bugTimer:     null,
-      _probeTimer:   null,
     };
-
-    // Start signal probing
-    async function probe() {
-      const { inHost, inPort, inMode, inLatency, inStreamid } = panel.fields;
-      const url = buildSrtUrl(inHost.value, inPort.value, inMode.value, inLatency.value, inStreamid.value);
-      if (!url) { panel.signalDot.className = 'signal-dot'; return; }
-      try {
-        const r = await fetch(`/api/stream/probe?srtUrl=${encodeURIComponent(url)}`);
-        const d = await r.json();
-        panel.signalDot.className = 'signal-dot ' + (d.signal ? 'signal-ok' : 'signal-none');
-        panel.signalDot.title = d.signal ? 'Signal detected' : 'No signal';
-      } catch (_) {
-        panel.signalDot.className = 'signal-dot';
-      }
-    }
-    probe();
-    panel._probeTimer = setInterval(probe, 5000);
 
     return panel;
   }
@@ -209,7 +190,8 @@
     };
     const [cls, label] = badgeMap[status] || badgeMap.idle;
     p.badge.className = 'badge ' + cls;
-    p.badge.textContent = label;
+    p.badge.childNodes[1].textContent = label;
+    p.signalDot.className = 'signal-dot' + (status === 'live' ? ' signal-ok' : status === 'error' ? ' signal-err' : '');
 
     const isLive = status === 'live' || status === 'starting';
     const isIdle = status === 'idle';
