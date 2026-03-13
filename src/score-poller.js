@@ -1,6 +1,6 @@
 const { EventEmitter } = require('events');
 
-const POLL_URL = 'https://tennisbeta.chrissabato.com/broadcast/match-scores.php';
+const POLL_URL = 'https://tennis.chrissabato.com/broadcast/match-scores.php';
 const POLL_INTERVAL = 5000;
 
 class ScorePoller extends EventEmitter {

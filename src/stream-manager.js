@@ -14,7 +14,7 @@ class StreamManager {
     this.onStatusChange = onStatusChange;
     this.fifoPath = `/tmp/tennis-scorebug-${matchIndex}.fifo`;
     this.courtNumber = matchIndex + 1;
-    this.bugUrl = `https://tennisbeta.chrissabato.com/broadcast/scorebug.php?court=${this.courtNumber}`;
+    this.bugUrl = `https://tennis.chrissabato.com/broadcast/scorebug.php?court=${this.courtNumber}`;
 
     this.status = 'idle';
     this.signal = false;   // true = actively receiving frames

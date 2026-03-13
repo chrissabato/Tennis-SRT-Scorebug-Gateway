@@ -5,7 +5,7 @@
   const grid = document.getElementById('stream-grid');
   const scoreStatusEl = document.getElementById('score-status');
 
-  const DEFAULT_BUG_URL = 'https://tennisbeta.chrissabato.com/broadcast/scorebug.php?court={court}';
+  const DEFAULT_BUG_URL = 'https://tennis.chrissabato.com/broadcast/scorebug.php?court={court}';
   const scorebugUrlEl = document.getElementById('scorebug-url');
   scorebugUrlEl.value = load('scorebug-url', DEFAULT_BUG_URL);
   scorebugUrlEl.addEventListener('input', () => save('scorebug-url', scorebugUrlEl.value));
