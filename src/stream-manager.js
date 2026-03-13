@@ -171,7 +171,9 @@ class StreamManager {
 
   _switchToSlate(reason) {
     this._cleanupMain();
-    this._startSlate(reason);
+    this._setStatus('slate');
+    // Delay slate start so main FFmpeg fully releases the SRT output connection
+    setTimeout(() => this._startSlate(reason), 2000);
     this._scheduleReconnect();
   }
 
@@ -201,10 +203,10 @@ class StreamManager {
       }
     });
 
-    this._slateFfmpeg.on('close', () => {
+    this._slateFfmpeg.on('close', (code) => {
       if (this.status === 'slate') {
+        console.log(`[StreamManager ${this.matchIndex}] Slate FFmpeg exited (code ${code}), restarting in 2s`);
         this._slateFfmpeg = null;
-        // Restart slate after brief delay if still in slate mode
         setTimeout(() => {
           if (this.status === 'slate') this._startSlate();
         }, 2000);
