@@ -18,6 +18,7 @@ class StreamManager {
 
     this.status = 'idle';
     this.signal = false;   // true = actively receiving frames
+    this._hadSignal = false; // true once signal has been established at least once
     this.error = null;
     this.stderrTail = '';
 
@@ -68,14 +69,15 @@ class StreamManager {
 
     this._ffmpeg = spawn('ffmpeg', args);
 
-    // If no frames within 60s of spawn, switch to slate
+    // Use shorter timeout if we've had signal before (receiver already connected)
+    const startupTimeout = this._hadSignal ? 15000 : 60000;
     this._startupTimer = setTimeout(() => {
       this._startupTimer = null;
       if (this.status === 'live' && this._lastFrame === 0) {
-        console.error(`[StreamManager ${this.matchIndex}] No frames in 60s, stderr: ${this.stderrTail.slice(-500)}`);
-        this._switchToSlate('No frames received within 60s of startup');
+        console.error(`[StreamManager ${this.matchIndex}] No frames in ${startupTimeout/1000}s, stderr: ${this.stderrTail.slice(-500)}`);
+        this._switchToSlate(`No frames received within ${startupTimeout/1000}s of startup`);
       }
-    }, 60000);
+    }, startupTimeout);
 
     // Parse frame count from stderr stats line: "frame= 123 fps=..."
     this._ffmpeg.stderr.on('data', (chunk) => {
@@ -100,6 +102,7 @@ class StreamManager {
 
         if (hasSignal && !this.signal) {
           this.signal = true;
+          this._hadSignal = true;
           this._notifySignal();
         } else if (!hasSignal && this.signal) {
           // Had signal, lost it — go to slate and schedule reconnect
