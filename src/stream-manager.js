@@ -6,7 +6,7 @@ const O_RDWR = fs.constants.O_RDWR;
 const O_NONBLOCK = fs.constants.O_NONBLOCK;
 
 const SLATE_PATH = path.join(__dirname, '..', 'no-video-detected.mp4');
-const RECONNECT_INTERVAL = 15000; // ms between reconnect attempts while in slate mode
+const RECONNECT_INTERVAL = 60000; // ms between reconnect attempts while in slate mode
 
 class StreamManager {
   constructor(matchIndex, onStatusChange) {
@@ -205,11 +205,11 @@ class StreamManager {
 
     this._slateFfmpeg.on('close', (code) => {
       if (this.status === 'slate') {
-        console.log(`[StreamManager ${this.matchIndex}] Slate FFmpeg exited (code ${code}), restarting in 2s`);
+        console.log(`[StreamManager ${this.matchIndex}] Slate FFmpeg exited (code ${code}), restarting in 500ms`);
         this._slateFfmpeg = null;
         setTimeout(() => {
           if (this.status === 'slate') this._startSlate();
-        }, 2000);
+        }, 500);
       }
     });
   }
