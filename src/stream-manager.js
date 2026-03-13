@@ -116,6 +116,7 @@ class StreamManager {
 
     this._ffmpeg.on('close', (code) => {
       if (this.status === 'live' || this.status === 'starting') {
+        console.error(`[StreamManager ${this.matchIndex}] FFmpeg exited (code ${code}): ${this.stderrTail.slice(-300)}`);
         this._switchToSlate(`FFmpeg exited with code ${code}`);
       } else {
         this._cleanupMain();
