@@ -186,6 +186,7 @@
       idle:     ['badge-idle',     'Idle'],
       starting: ['badge-starting', 'Starting'],
       live:     ['badge-live',     'Live'],
+      slate:    ['badge-starting', 'No Signal'],
       error:    ['badge-error',    'Error'],
     };
     const [cls, label] = badgeMap[status] || badgeMap.idle;
@@ -193,7 +194,7 @@
     p.badge.childNodes[1].textContent = label;
     p.signalDot.className = 'signal-dot' + (signal ? ' signal-ok' : status === 'live' ? ' signal-none' : status === 'error' ? ' signal-err' : '');
 
-    const isLive = status === 'live' || status === 'starting';
+    const isLive = status === 'live' || status === 'starting' || status === 'slate';
     const isIdle = status === 'idle';
 
     p.startBtn.disabled = isLive;
