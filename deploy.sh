@@ -8,11 +8,12 @@ echo "=== Tennis SRT Scorebug Gateway — Deploy ==="
 # System packages
 echo "--- Installing system dependencies..."
 apt-get update -qq
-apt-get install -y \
-  ffmpeg \
-  nodejs npm \
-  libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev pkg-config \
-  ufw
+apt-get install -y ffmpeg ufw curl
+
+# Node.js 18+ via NodeSource
+echo "--- Installing Node.js 18..."
+curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+apt-get install -y nodejs
 
 # Node global tools
 echo "--- Installing PM2..."
