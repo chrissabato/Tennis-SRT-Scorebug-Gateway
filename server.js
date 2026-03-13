@@ -182,10 +182,8 @@ server.listen(PORT, '0.0.0.0', () => {
 
 server.on('error', (err) => {
   if (err.code === 'EADDRINUSE') {
-    console.error(`Port ${PORT} already in use — killing stale process and retrying...`);
-    const { execSync } = require('child_process');
-    try { execSync(`fuser -k ${PORT}/tcp`); } catch (_) {}
-    setTimeout(() => server.listen(PORT, '0.0.0.0'), 1000);
+    console.error(`Port ${PORT} already in use — exiting so PM2 does not restart`);
+    process.exit(0);  // exit 0 so PM2 does not auto-restart
   } else {
     throw err;
   }
