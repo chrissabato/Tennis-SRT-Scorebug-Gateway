@@ -17,11 +17,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
-// Clean up stale FIFOs on startup
-for (let i = 0; i < NUM_STREAMS; i++) {
-  try { fs.unlinkSync(`/tmp/tennis-scorebug-${i}.fifo`); } catch (_) {}
-}
-
 // Score poller
 const poller = new ScorePoller();
 
