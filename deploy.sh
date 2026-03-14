@@ -41,8 +41,8 @@ echo "--- Configuring firewall..."
 ufw allow 22/tcp
 ufw allow 80/tcp
 ufw allow 443/tcp
-ufw allow 5001:5010/udp
-ufw allow 6001:6010/udp
+ufw allow 5000:5010/udp
+ufw allow 6000:6010/udp
 ufw --force enable
 
 # Nginx TLS config
