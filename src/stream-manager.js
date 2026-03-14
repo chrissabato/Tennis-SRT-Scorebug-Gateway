@@ -1,12 +1,8 @@
 const { spawn, execSync } = require('child_process');
 const fs = require('fs');
-const path = require('path');
 
 const O_RDWR = fs.constants.O_RDWR;
 const O_NONBLOCK = fs.constants.O_NONBLOCK;
-
-const SLATE_PATH = path.join(__dirname, '..', 'no-video-detected.mp4');
-const RECONNECT_INTERVAL = 60000; // ms between reconnect attempts while in slate mode
 
 class StreamManager {
   constructor(matchIndex, onStatusChange) {
@@ -18,32 +14,19 @@ class StreamManager {
 
     this.status = 'idle';
     this.signal = false;   // true = actively receiving frames
-    this._hadSignal = false; // true once signal has been established at least once
     this.error = null;
     this.stderrTail = '';
 
     this._ffmpeg = null;
-    this._slateFfmpeg = null;
     this._fifoFd = null;
     this._renderTimer = null;
     this._lastFrame = 0;
     this._signalCheckTimer = null;
-    this._reconnectTimer = null;
-    this._startupTimer = null;
-    this._srtInput = null;
-    this._srtOutput = null;
   }
 
   async start(srtInput, srtOutput, bugUrl) {
     if (bugUrl) this.bugUrl = bugUrl;
-    this._srtInput = srtInput;
-    this._srtOutput = srtOutput;
-
     if (this.status === 'live' || this.status === 'starting') return;
-
-    // If slate is running, tear it down before starting main pipeline
-    this._stopSlate();
-    if (this._reconnectTimer) { clearTimeout(this._reconnectTimer); this._reconnectTimer = null; }
 
     this._setStatus('starting');
     this.error = null;
@@ -69,16 +52,6 @@ class StreamManager {
 
     this._ffmpeg = spawn('ffmpeg', args);
 
-    // Use shorter timeout if we've had signal before (receiver already connected)
-    const startupTimeout = this._hadSignal ? 15000 : 60000;
-    this._startupTimer = setTimeout(() => {
-      this._startupTimer = null;
-      if (this.status === 'live' && this._lastFrame === 0) {
-        console.error(`[StreamManager ${this.matchIndex}] No frames in ${startupTimeout/1000}s, stderr: ${this.stderrTail.slice(-500)}`);
-        this._switchToSlate(`No frames received within ${startupTimeout/1000}s of startup`);
-      }
-    }, startupTimeout);
-
     // Parse frame count from stderr stats line: "frame= 123 fps=..."
     this._ffmpeg.stderr.on('data', (chunk) => {
       const text = chunk.toString();
@@ -94,37 +67,29 @@ class StreamManager {
       this._setStatus('live');
       this._renderTimer = setInterval(() => this._fetchAndWrite(), 1000);
 
-      // Check every 3s if frame count is advancing; switch to slate if signal lost
+      // Check every 3s if frame count is advancing
       let prevFrame = 0;
       this._signalCheckTimer = setInterval(() => {
         const hasSignal = this._lastFrame > prevFrame;
         prevFrame = this._lastFrame;
-
-        if (hasSignal && !this.signal) {
-          this.signal = true;
-          this._hadSignal = true;
+        if (hasSignal !== this.signal) {
+          this.signal = hasSignal;
           this._notifySignal();
-        } else if (!hasSignal && this.signal) {
-          // Had signal, lost it — go to slate and schedule reconnect
-          this.signal = false;
-          this._notifySignal();
-          if (this.status === 'live') this._switchToSlate();
         }
       }, 3000);
     });
 
     this._ffmpeg.on('error', (err) => {
+      this._setStatus('error', err.message);
       this._cleanupMain();
-      this._switchToSlate(`FFmpeg error: ${err.message}`);
     });
 
     this._ffmpeg.on('close', (code) => {
       if (this.status === 'live' || this.status === 'starting') {
         console.error(`[StreamManager ${this.matchIndex}] FFmpeg exited (code ${code}): ${this.stderrTail.slice(-300)}`);
-        this._switchToSlate(`FFmpeg exited with code ${code}`);
-      } else {
-        this._cleanupMain();
+        this._setStatus('error', `FFmpeg exited with code ${code}`);
       }
+      this._cleanupMain();
     });
   }
 
@@ -132,8 +97,6 @@ class StreamManager {
     if (this.status === 'idle') return;
     this.signal = false;
     this._setStatus('idle');
-    if (this._reconnectTimer) { clearTimeout(this._reconnectTimer); this._reconnectTimer = null; }
-    this._stopSlate();
     this._cleanupMain();
   }
 
@@ -164,8 +127,8 @@ class StreamManager {
       fs.writeSync(this._fifoFd, buf);
     } catch (err) {
       if (err.code === 'EPIPE') {
+        this._setStatus('error', 'FIFO write EPIPE — pipe broken');
         this._cleanupMain();
-        this._switchToSlate('FIFO write EPIPE — pipe broken');
       } else if (err.code === 'EAGAIN') {
         // FFmpeg not reading — stalled, skip frame silently
       } else {
@@ -174,75 +137,7 @@ class StreamManager {
     }
   }
 
-  _switchToSlate(reason) {
-    this._cleanupMain();
-    this._setStatus('slate');
-    // Delay slate start so main FFmpeg fully releases the SRT output port
-    setTimeout(() => this._startSlate(reason), 5000);
-    this._scheduleReconnect();
-  }
-
-  _startSlate(reason) {
-    if (this._slateFfmpeg || !this._srtOutput) return;
-
-    console.log(`[StreamManager ${this.matchIndex}] Starting slate${reason ? ': ' + reason : ''}`);
-
-    const args = [
-      '-stream_loop', '-1',
-      '-re',
-      '-i', SLATE_PATH,
-      '-c:v', 'h264_nvenc', '-preset', 'p1', '-tune', 'ull',
-      '-c:a', 'aac', '-ar', '48000',
-      '-f', 'mpegts', this._srtOutput,
-    ];
-
-    this._slateFfmpeg = spawn('ffmpeg', args);
-    this._setStatus('slate');
-    this.signal = false;
-
-    this._slateFfmpeg.stderr.on('data', (chunk) => {
-      const text = chunk.toString();
-      this.stderrTail += text;
-      if (this.stderrTail.length > 2048) {
-        this.stderrTail = this.stderrTail.slice(-2048);
-      }
-    });
-
-    this._slateFfmpeg.on('close', (code) => {
-      if (this.status === 'slate') {
-        console.error(`[StreamManager ${this.matchIndex}] Slate FFmpeg exited (code ${code}): ${this.stderrTail.slice(-300)}`);
-        this._slateFfmpeg = null;
-        setTimeout(() => {
-          if (this.status === 'slate') this._startSlate();
-        }, 500);
-      }
-    });
-  }
-
-  _stopSlate() {
-    if (this._slateFfmpeg) {
-      const proc = this._slateFfmpeg;
-      this._slateFfmpeg = null;
-      try { proc.kill('SIGTERM'); } catch (_) {}
-      setTimeout(() => { try { proc.kill('SIGKILL'); } catch (_) {} }, 3000);
-    }
-  }
-
-  _scheduleReconnect() {
-    if (this._reconnectTimer) return;
-    this._reconnectTimer = setTimeout(() => {
-      this._reconnectTimer = null;
-      if (this.status === 'slate' && this._srtInput && this._srtOutput) {
-        console.log(`[StreamManager ${this.matchIndex}] Attempting reconnect...`);
-        // stop() will kill slate; start() will relaunch main pipeline
-        this._stopSlate();
-        setTimeout(() => this.start(this._srtInput, this._srtOutput), 1000);
-      }
-    }, RECONNECT_INTERVAL);
-  }
-
   _cleanupMain() {
-    if (this._startupTimer) { clearTimeout(this._startupTimer); this._startupTimer = null; }
     if (this._renderTimer) { clearInterval(this._renderTimer); this._renderTimer = null; }
     if (this._signalCheckTimer) { clearInterval(this._signalCheckTimer); this._signalCheckTimer = null; }
 
