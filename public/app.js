@@ -119,7 +119,7 @@
           </div>
           <div class="field-group">
             <label>Port</label>
-            <input type="text" id="out-port-${i}" placeholder="5001" autocomplete="off" spellcheck="false">
+            <input type="text" id="out-port-${i}" placeholder="6001" autocomplete="off" spellcheck="false">
           </div>
           <div class="field-group">
             <label>Mode</label>
@@ -165,13 +165,13 @@
 
     // Restore
     fields.inHost.value      = load(`s${i}-in-host`);
-    fields.inPort.value      = load(`s${i}-in-port`);
-    fields.inMode.value      = load(`s${i}-in-mode`, 'listener');
+    fields.inPort.value      = load(`s${i}-in-port`,     String(5001 + i));
+    fields.inMode.value      = load(`s${i}-in-mode`,     'listener');
     fields.inLatency.value   = load(`s${i}-in-latency`);
     fields.inStreamid.value  = load(`s${i}-in-streamid`);
     fields.outHost.value     = load(`s${i}-out-host`);
-    fields.outPort.value     = load(`s${i}-out-port`);
-    fields.outMode.value     = load(`s${i}-out-mode`, 'caller');
+    fields.outPort.value     = load(`s${i}-out-port`,    String(6001 + i));
+    fields.outMode.value     = load(`s${i}-out-mode`,    'listener');
     fields.outLatency.value  = load(`s${i}-out-latency`);
     fields.outStreamid.value = load(`s${i}-out-streamid`);
 
