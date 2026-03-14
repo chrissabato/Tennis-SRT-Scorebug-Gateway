@@ -5,9 +5,10 @@ const O_RDWR = fs.constants.O_RDWR;
 const O_NONBLOCK = fs.constants.O_NONBLOCK;
 
 class StreamManager {
-  constructor(matchIndex, onStatusChange) {
+  constructor(matchIndex, onStatusChange, onLog) {
     this.matchIndex = matchIndex;
     this.onStatusChange = onStatusChange;
+    this.onLog = onLog;
     this.fifoPath     = `/tmp/tennis-scorebug-${matchIndex}.fifo`;
     this.teamFifoPath = `/tmp/tennis-teambug-${matchIndex}.fifo`;
     this.courtNumber = matchIndex + 1;
@@ -82,6 +83,7 @@ class StreamManager {
       if (this.stderrTail.length > 2048) {
         this.stderrTail = this.stderrTail.slice(-2048);
       }
+      if (this.onLog) this.onLog(this.matchIndex, text);
     });
 
     this._ffmpeg.on('spawn', () => {

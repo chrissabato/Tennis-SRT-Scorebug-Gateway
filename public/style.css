@@ -274,3 +274,30 @@ button:disabled { opacity: 0.35; cursor: not-allowed; }
 }
 
 .error-area.visible { display: block; }
+
+.log-section { margin-top: 6px; }
+
+.log-toggle {
+  background: none;
+  border: 1px solid #444;
+  color: #888;
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.log-toggle:hover { color: #ccc; border-color: #666; }
+
+.log-area {
+  margin-top: 4px;
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 4px;
+  padding: 8px;
+  font-size: 0.65rem;
+  color: #aaa;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 150px;
+  overflow-y: auto;
+}

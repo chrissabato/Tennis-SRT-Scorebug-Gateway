@@ -157,6 +157,10 @@
         <button class="btn-stop" id="stop-${i}" disabled>Stop</button>
       </div>
       <div class="error-area" id="error-${i}"></div>
+      <div class="log-section" id="log-section-${i}">
+        <button class="log-toggle" id="log-toggle-${i}">▶ Log</button>
+        <pre class="log-area" id="log-${i}" style="display:none"></pre>
+      </div>
     `;
 
     const fields = {
@@ -209,6 +213,14 @@
     startBtn.addEventListener('click', () => startStream(i));
     stopBtn.addEventListener('click',  () => stopStream(i));
 
+    const logToggle = el.querySelector(`#log-toggle-${i}`);
+    const logEl     = el.querySelector(`#log-${i}`);
+    logToggle.addEventListener('click', () => {
+      const open = logEl.style.display === 'none';
+      logEl.style.display = open ? 'block' : 'none';
+      logToggle.textContent = (open ? '▼' : '▶') + ' Log';
+    });
+
     const panel = {
       el,
       badge:         el.querySelector(`#badge-${i}`),
@@ -219,6 +231,7 @@
       startBtn,
       stopBtn,
       errorEl:       el.querySelector(`#error-${i}`),
+      logEl,
       allInputs:     Object.values(fields),
       courtNumber:   i + 1,
       _bugTimer:     null,
@@ -347,6 +360,15 @@
         applyScoreData(msg.matches);
       } else if (msg.type === 'stream:status') {
         applyStatus(msg.matchIndex, msg.status, msg.signal, msg.error, msg.stderrTail);
+      } else if (msg.type === 'stream:log') {
+        const p = panels[msg.matchIndex];
+        if (p && p.logEl) {
+          p.logEl.textContent += msg.text;
+          if (p.logEl.textContent.length > 20000) {
+            p.logEl.textContent = p.logEl.textContent.slice(-20000);
+          }
+          p.logEl.scrollTop = p.logEl.scrollHeight;
+        }
       } else if (msg.type === 'score:error') {
         scoreStatusEl.textContent = 'Score API error — using cached data';
         scoreStatusEl.className = 'score-status err';

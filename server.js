@@ -23,7 +23,7 @@ const poller = new ScorePoller();
 // Stream managers
 const streams = new Map();
 for (let i = 0; i < NUM_STREAMS; i++) {
-  streams.set(i, new StreamManager(i, onStreamStatusChange));
+  streams.set(i, new StreamManager(i, onStreamStatusChange, onStreamLog));
 }
 
 function broadcast(message) {
@@ -33,6 +33,10 @@ function broadcast(message) {
       client.send(payload);
     }
   });
+}
+
+function onStreamLog(matchIndex, text) {
+  broadcast({ type: 'stream:log', matchIndex, text });
 }
 
 function onStreamStatusChange(matchIndex, status, error) {
