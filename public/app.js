@@ -11,12 +11,13 @@
   scorebugUrlEl.value = load('scorebug-url', DEFAULT_BUG_URL);
   scorebugUrlEl.addEventListener('input', () => save('scorebug-url', scorebugUrlEl.value));
 
+  const DEFAULT_TEAM_BUG_URL = 'https://tennis.chrissabato.com/broadcast/scorebug-team.php';
   const teamBugUrlEl = document.getElementById('teambug-url');
-  teamBugUrlEl.value = load('teambug-url', '');
+  teamBugUrlEl.value = load('teambug-url', DEFAULT_TEAM_BUG_URL);
   teamBugUrlEl.addEventListener('input', () => save('teambug-url', teamBugUrlEl.value));
 
   function getTeamBugUrl() {
-    return teamBugUrlEl.value.trim() || null;
+    return teamBugUrlEl.value.trim() || DEFAULT_TEAM_BUG_URL;
   }
 
   const bitrateEl = document.getElementById('video-bitrate');
