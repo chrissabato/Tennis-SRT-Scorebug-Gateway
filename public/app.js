@@ -11,6 +11,15 @@
   scorebugUrlEl.value = load('scorebug-url', DEFAULT_BUG_URL);
   scorebugUrlEl.addEventListener('input', () => save('scorebug-url', scorebugUrlEl.value));
 
+  const teamBugUrlEl = document.getElementById('teambug-url');
+  teamBugUrlEl.value = load('teambug-url', '');
+  teamBugUrlEl.addEventListener('input', () => save('teambug-url', teamBugUrlEl.value));
+
+  function getTeamBugUrl(courtNumber) {
+    const tpl = teamBugUrlEl.value.trim();
+    return tpl ? tpl.replace('{court}', courtNumber) : null;
+  }
+
   const bitrateEl = document.getElementById('video-bitrate');
   bitrateEl.value = load('video-bitrate', DEFAULT_BITRATE);
   bitrateEl.addEventListener('input', () => save('video-bitrate', bitrateEl.value));
@@ -291,7 +300,7 @@
       const res = await fetch('/api/stream/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ matchIndex: i, srtInput, srtOutput, bugUrl: getBugUrl(i + 1), bitrate: parseInt(bitrateEl.value, 10) || DEFAULT_BITRATE }),
+        body: JSON.stringify({ matchIndex: i, srtInput, srtOutput, bugUrl: getBugUrl(i + 1), bitrate: parseInt(bitrateEl.value, 10) || DEFAULT_BITRATE, teamBugUrl: getTeamBugUrl(i + 1) }),
       });
       const data = await res.json();
       if (!res.ok) alert(data.error || 'Failed to start stream');

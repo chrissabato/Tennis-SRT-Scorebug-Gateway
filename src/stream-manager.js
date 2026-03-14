@@ -8,9 +8,11 @@ class StreamManager {
   constructor(matchIndex, onStatusChange) {
     this.matchIndex = matchIndex;
     this.onStatusChange = onStatusChange;
-    this.fifoPath = `/tmp/tennis-scorebug-${matchIndex}.fifo`;
+    this.fifoPath     = `/tmp/tennis-scorebug-${matchIndex}.fifo`;
+    this.teamFifoPath = `/tmp/tennis-teambug-${matchIndex}.fifo`;
     this.courtNumber = matchIndex + 1;
-    this.bugUrl = `https://tennis.chrissabato.com/broadcast/scorebug.php?court=${this.courtNumber}`;
+    this.bugUrl     = `https://tennis.chrissabato.com/broadcast/scorebug.php?court=${this.courtNumber}`;
+    this.teamBugUrl = null;
 
     this.status = 'idle';
     this.signal = false;   // true = actively receiving frames
@@ -20,14 +22,17 @@ class StreamManager {
 
     this._ffmpeg = null;
     this._fifoFd = null;
+    this._teamFifoFd = null;
     this._renderTimer = null;
+    this._teamRenderTimer = null;
     this._lastFrame = 0;
     this._signalCheckTimer = null;
   }
 
-  async start(srtInput, srtOutput, bugUrl, bitrate) {
-    if (bugUrl) this.bugUrl = bugUrl;
-    if (bitrate) this.bitrate = bitrate;
+  async start(srtInput, srtOutput, bugUrl, bitrate, teamBugUrl) {
+    if (bugUrl)     this.bugUrl     = bugUrl;
+    if (bitrate)    this.bitrate    = bitrate;
+    if (teamBugUrl) this.teamBugUrl = teamBugUrl;
     if (this.status === 'live' || this.status === 'starting') return;
 
     this._setStatus('starting');
@@ -36,22 +41,35 @@ class StreamManager {
     this._lastFrame = 0;
 
     try {
-      this._setupFifo();
+      this._setupFifo(this.fifoPath, '_fifoFd');
+      if (this.teamBugUrl) this._setupFifo(this.teamFifoPath, '_teamFifoFd');
     } catch (err) {
       this._setStatus('error', `FIFO setup failed: ${err.message}`);
       return;
     }
 
-    const args = [
-      '-i', srtInput,
-      '-f', 'mjpeg', '-framerate', '1', '-i', this.fifoPath,
-      '-filter_complex', '[0:v][1:v]overlay=x=20:y=H-h-20:format=auto',
-      '-c:v', 'h264_nvenc', '-preset', 'p1', '-tune', 'ull',
-      '-b:v', `${this.bitrate}k`, '-maxrate', `${this.bitrate}k`, '-bufsize', `${this.bitrate * 2}k`, '-g', '60',
-      '-c:a', 'copy',
-      '-stats', '-stats_period', '2',
-      '-f', 'mpegts', srtOutput,
-    ];
+    const args = this.teamBugUrl
+      ? [
+          '-i', srtInput,
+          '-f', 'mjpeg', '-framerate', '1', '-i', this.fifoPath,
+          '-f', 'mjpeg', '-framerate', '1', '-i', this.teamFifoPath,
+          '-filter_complex', '[0:v][1:v]overlay=x=20:y=H-h-20:format=auto[v1];[v1][2:v]overlay=x=20:y=20:format=auto',
+          '-c:v', 'h264_nvenc', '-preset', 'p1', '-tune', 'ull',
+          '-b:v', `${this.bitrate}k`, '-maxrate', `${this.bitrate}k`, '-bufsize', `${this.bitrate * 2}k`, '-g', '60',
+          '-c:a', 'copy',
+          '-stats', '-stats_period', '2',
+          '-f', 'mpegts', srtOutput,
+        ]
+      : [
+          '-i', srtInput,
+          '-f', 'mjpeg', '-framerate', '1', '-i', this.fifoPath,
+          '-filter_complex', '[0:v][1:v]overlay=x=20:y=H-h-20:format=auto',
+          '-c:v', 'h264_nvenc', '-preset', 'p1', '-tune', 'ull',
+          '-b:v', `${this.bitrate}k`, '-maxrate', `${this.bitrate}k`, '-bufsize', `${this.bitrate * 2}k`, '-g', '60',
+          '-c:a', 'copy',
+          '-stats', '-stats_period', '2',
+          '-f', 'mpegts', srtOutput,
+        ];
 
     this._ffmpeg = spawn('ffmpeg', args);
 
@@ -68,7 +86,10 @@ class StreamManager {
 
     this._ffmpeg.on('spawn', () => {
       this._setStatus('live');
-      this._renderTimer = setInterval(() => this._fetchAndWrite(), 1000);
+      this._renderTimer = setInterval(() => this._fetchAndWrite(this.bugUrl, '_fifoFd'), 1000);
+      if (this.teamBugUrl) {
+        this._teamRenderTimer = setInterval(() => this._fetchAndWrite(this.teamBugUrl, '_teamFifoFd'), 1000);
+      }
 
       // Check every 3s if frame count is advancing
       let prevFrame = 0;
@@ -115,19 +136,19 @@ class StreamManager {
     };
   }
 
-  _setupFifo() {
-    try { fs.unlinkSync(this.fifoPath); } catch (_) {}
-    execSync(`mkfifo ${this.fifoPath}`);
-    this._fifoFd = fs.openSync(this.fifoPath, O_RDWR | O_NONBLOCK);
+  _setupFifo(fifoPath, fdKey) {
+    try { fs.unlinkSync(fifoPath); } catch (_) {}
+    execSync(`mkfifo ${fifoPath}`);
+    this[fdKey] = fs.openSync(fifoPath, O_RDWR | O_NONBLOCK);
   }
 
-  async _fetchAndWrite() {
-    if (this._fifoFd === null) return;
+  async _fetchAndWrite(url, fdKey) {
+    if (this[fdKey] === null) return;
     try {
-      const res = await fetch(this.bugUrl, { signal: AbortSignal.timeout(3000) });
+      const res = await fetch(url, { signal: AbortSignal.timeout(3000) });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const buf = Buffer.from(await res.arrayBuffer());
-      fs.writeSync(this._fifoFd, buf);
+      fs.writeSync(this[fdKey], buf);
     } catch (err) {
       if (err.code === 'EPIPE') {
         this._setStatus('error', 'FIFO write EPIPE — pipe broken');
@@ -135,13 +156,14 @@ class StreamManager {
       } else if (err.code === 'EAGAIN') {
         // FFmpeg not reading — stalled, skip frame silently
       } else {
-        console.error(`[StreamManager ${this.matchIndex}] fetch error:`, err.message);
+        console.error(`[StreamManager ${this.matchIndex}] fetch error (${url}):`, err.message);
       }
     }
   }
 
   _cleanupMain() {
-    if (this._renderTimer) { clearInterval(this._renderTimer); this._renderTimer = null; }
+    if (this._renderTimer)      { clearInterval(this._renderTimer);      this._renderTimer = null; }
+    if (this._teamRenderTimer)  { clearInterval(this._teamRenderTimer);  this._teamRenderTimer = null; }
     if (this._signalCheckTimer) { clearInterval(this._signalCheckTimer); this._signalCheckTimer = null; }
 
     if (this._ffmpeg) {
@@ -155,8 +177,13 @@ class StreamManager {
       try { fs.closeSync(this._fifoFd); } catch (_) {}
       this._fifoFd = null;
     }
+    if (this._teamFifoFd !== null) {
+      try { fs.closeSync(this._teamFifoFd); } catch (_) {}
+      this._teamFifoFd = null;
+    }
 
     try { fs.unlinkSync(this.fifoPath); } catch (_) {}
+    try { fs.unlinkSync(this.teamFifoPath); } catch (_) {}
   }
 
   _setStatus(status, error = null) {
