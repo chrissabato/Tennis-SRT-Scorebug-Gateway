@@ -44,7 +44,7 @@ class StreamManager {
       '-i', srtInput,
       '-f', 'mjpeg', '-framerate', '1', '-i', this.fifoPath,
       '-filter_complex', '[0:v][1:v]overlay=x=20:y=H-h-20:format=auto',
-      '-c:v', 'h264_nvenc', '-preset', 'p1', '-tune', 'ull',
+      '-c:v', 'h264_nvenc', '-preset', 'p1', '-tune', 'ull', '-b:v', '8000k',
       '-c:a', 'copy',
       '-stats', '-stats_period', '2',
       '-f', 'mpegts', srtOutput,
