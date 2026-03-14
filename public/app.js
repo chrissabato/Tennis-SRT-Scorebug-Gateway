@@ -15,6 +15,12 @@
   bitrateEl.value = load('video-bitrate', DEFAULT_BITRATE);
   bitrateEl.addEventListener('input', () => save('video-bitrate', bitrateEl.value));
 
+  document.getElementById('reset-defaults').addEventListener('click', () => {
+    if (!confirm('Reset all fields to defaults? This cannot be undone.')) return;
+    localStorage.clear();
+    location.reload();
+  });
+
   function getBugUrl(courtNumber) {
     const tpl = scorebugUrlEl.value.trim() || DEFAULT_BUG_URL;
     return tpl.replace('{court}', courtNumber);

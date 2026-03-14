@@ -73,6 +73,12 @@ header h1 {
   max-width: 160px;
 }
 
+.settings-field--action {
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: 2px;
+}
+
 .settings-hint {
   color: #444;
   font-weight: normal;
