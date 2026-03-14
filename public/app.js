@@ -6,9 +6,14 @@
   const scoreStatusEl = document.getElementById('score-status');
 
   const DEFAULT_BUG_URL = 'https://tennis.chrissabato.com/broadcast/scorebug.php?court={court}';
+  const DEFAULT_BITRATE = 8000;
   const scorebugUrlEl = document.getElementById('scorebug-url');
   scorebugUrlEl.value = load('scorebug-url', DEFAULT_BUG_URL);
   scorebugUrlEl.addEventListener('input', () => save('scorebug-url', scorebugUrlEl.value));
+
+  const bitrateEl = document.getElementById('video-bitrate');
+  bitrateEl.value = load('video-bitrate', DEFAULT_BITRATE);
+  bitrateEl.addEventListener('input', () => save('video-bitrate', bitrateEl.value));
 
   function getBugUrl(courtNumber) {
     const tpl = scorebugUrlEl.value.trim() || DEFAULT_BUG_URL;
@@ -251,7 +256,7 @@
       const res = await fetch('/api/stream/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ matchIndex: i, srtInput, srtOutput, bugUrl: getBugUrl(i + 1) }),
+        body: JSON.stringify({ matchIndex: i, srtInput, srtOutput, bugUrl: getBugUrl(i + 1), bitrate: parseInt(bitrateEl.value, 10) || DEFAULT_BITRATE }),
       });
       const data = await res.json();
       if (!res.ok) alert(data.error || 'Failed to start stream');

@@ -76,7 +76,7 @@ poller.on('error', () => {
 
 // REST API
 app.post('/api/stream/start', async (req, res) => {
-  const { matchIndex, srtInput, srtOutput, bugUrl } = req.body;
+  const { matchIndex, srtInput, srtOutput, bugUrl, bitrate } = req.body;
   const idx = parseInt(matchIndex, 10);
 
   if (isNaN(idx) || idx < 0 || idx >= NUM_STREAMS) {
@@ -87,7 +87,7 @@ app.post('/api/stream/start', async (req, res) => {
   }
 
   const mgr = streams.get(idx);
-  await mgr.start(srtInput, srtOutput, bugUrl);
+  await mgr.start(srtInput, srtOutput, bugUrl, bitrate);
   res.json({ ok: true, status: mgr.status });
 });
 
