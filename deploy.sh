@@ -114,3 +114,11 @@ else
   echo "    App:  https://$DOMAIN  (via Let's Encrypt)"
 fi
 echo "    Logs: pm2 logs tennis-gateway"
+
+# Notify via Google Chat webhook if configured
+[ -f /etc/tennis-env ] && source /etc/tennis-env
+if [ -n "$DEPLOY_WEBHOOK_URL" ]; then
+  curl -s -X POST -H 'Content-Type: application/json' \
+    -d "{\"text\": \"Tennis gateway deploy complete on $DOMAIN\"}" \
+    "$DEPLOY_WEBHOOK_URL" > /dev/null
+fi
