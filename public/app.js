@@ -27,6 +27,27 @@
     panels.push(panel);
   }
 
+  function parseSrtUrl(url) {
+    const m = url.match(/^srt:\/\/([^:?]*):(\d+)(\?.*)?$/);
+    if (!m) return null;
+    const params = new URLSearchParams(m[3] ? m[3].slice(1) : '');
+    return {
+      host:     m[1] || '',
+      port:     m[2] || '',
+      mode:     params.get('mode') || (m[1] ? 'caller' : 'listener'),
+      latency:  params.get('latency') || '',
+      streamid: params.get('streamid') || '',
+    };
+  }
+
+  function applyParsedSrt(parsed, hostEl, portEl, modeEl, latencyEl, streamidEl, prefix, i) {
+    hostEl.value     = parsed.host;     save(`s${i}-${prefix}-host`,     parsed.host);
+    portEl.value     = parsed.port;     save(`s${i}-${prefix}-port`,     parsed.port);
+    modeEl.value     = parsed.mode;     save(`s${i}-${prefix}-mode`,     parsed.mode);
+    latencyEl.value  = parsed.latency;  save(`s${i}-${prefix}-latency`,  parsed.latency);
+    streamidEl.value = parsed.streamid; save(`s${i}-${prefix}-streamid`, parsed.streamid);
+  }
+
   function buildSrtUrl(host, port, mode, latency, streamid) {
     const h = host.trim();
     const p = port.trim();
@@ -148,13 +169,21 @@
     fields.outLatency.value  = load(`s${i}-out-latency`);
     fields.outStreamid.value = load(`s${i}-out-streamid`);
 
-    // Persist
-    fields.inHost.addEventListener('input',      () => save(`s${i}-in-host`,      fields.inHost.value));
+    // Persist + auto-parse full SRT URLs pasted into host fields
+    fields.inHost.addEventListener('input', () => {
+      const parsed = parseSrtUrl(fields.inHost.value.trim());
+      if (parsed) applyParsedSrt(parsed, fields.inHost, fields.inPort, fields.inMode, fields.inLatency, fields.inStreamid, 'in', i);
+      else save(`s${i}-in-host`, fields.inHost.value);
+    });
+    fields.outHost.addEventListener('input', () => {
+      const parsed = parseSrtUrl(fields.outHost.value.trim());
+      if (parsed) applyParsedSrt(parsed, fields.outHost, fields.outPort, fields.outMode, fields.outLatency, fields.outStreamid, 'out', i);
+      else save(`s${i}-out-host`, fields.outHost.value);
+    });
     fields.inPort.addEventListener('input',      () => save(`s${i}-in-port`,      fields.inPort.value));
     fields.inMode.addEventListener('change',     () => save(`s${i}-in-mode`,      fields.inMode.value));
     fields.inLatency.addEventListener('input',   () => save(`s${i}-in-latency`,   fields.inLatency.value));
     fields.inStreamid.addEventListener('input',  () => save(`s${i}-in-streamid`,  fields.inStreamid.value));
-    fields.outHost.addEventListener('input',     () => save(`s${i}-out-host`,     fields.outHost.value));
     fields.outPort.addEventListener('input',     () => save(`s${i}-out-port`,     fields.outPort.value));
     fields.outMode.addEventListener('change',    () => save(`s${i}-out-mode`,     fields.outMode.value));
     fields.outLatency.addEventListener('input',  () => save(`s${i}-out-latency`,  fields.outLatency.value));
