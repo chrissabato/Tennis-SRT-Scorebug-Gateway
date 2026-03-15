@@ -57,8 +57,12 @@ EOF
 
 chmod 600 /etc/ssl/tennis.key
 
-# Google Chat deploy notification webhook
-echo 'DEPLOY_WEBHOOK_URL=https://chat.googleapis.com/...' > /etc/tennis-env
+# Configuration — URLs and webhook (kept out of the public repo)
+cat > /etc/tennis-env << 'EOF'
+SCOREBUG_URL=https://your-domain/broadcast/scorebug.php?court={court}
+TEAM_BUG_URL=https://your-domain/broadcast/scorebug-team.php
+DEPLOY_WEBHOOK_URL=https://chat.googleapis.com/v1/spaces/.../messages?key=...
+EOF
 
 # Run deploy detached so cloud-init doesn't kill it
 curl -fsSL https://raw.githubusercontent.com/chrissabato/Tennis-SRT-Scorebug-Gateway/master/deploy.sh > /tmp/deploy.sh
