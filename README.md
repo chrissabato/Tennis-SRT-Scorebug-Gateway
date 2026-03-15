@@ -59,8 +59,8 @@ chmod 600 /etc/ssl/tennis.key
 
 # Configuration — URLs and webhook (kept out of the public repo)
 cat > /etc/tennis-env << 'EOF'
-SCOREBUG_URL=https://your-domain/broadcast/scorebug.php?court={court}
-TEAM_BUG_URL=https://your-domain/broadcast/scorebug-team.php
+SCOREBUG_URL=https://your-domain/scorebug.php?court={court}
+TEAM_BUG_URL=https://your-domain/scorebug-team.php
 DEPLOY_WEBHOOK_URL=https://chat.googleapis.com/v1/spaces/.../messages?key=...
 EOF
 
