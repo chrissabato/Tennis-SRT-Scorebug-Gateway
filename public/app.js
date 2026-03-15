@@ -17,6 +17,11 @@
     _apiKey              = cfg.apiKey       || '';
     DEFAULT_BUG_URL      = cfg.scorebugUrl  || '';
     DEFAULT_TEAM_BUG_URL = cfg.teamBugUrl   || '';
+    const authEl = document.getElementById('auth-indicator');
+    if (authEl) {
+      authEl.textContent = _apiKey ? '🔒' : '🔓';
+      authEl.title = _apiKey ? 'API key active' : 'API key not configured';
+    }
     scorebugUrlEl.placeholder = DEFAULT_BUG_URL;
     teamBugUrlEl.placeholder  = DEFAULT_TEAM_BUG_URL;
     if (!scorebugUrlEl.value) scorebugUrlEl.value = load('scorebug-url', DEFAULT_BUG_URL);

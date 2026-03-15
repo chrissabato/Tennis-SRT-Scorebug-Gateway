@@ -36,6 +36,12 @@ header h1 {
   gap: 16px;
 }
 
+.auth-indicator {
+  font-size: 1rem;
+  cursor: default;
+  margin-left: 8px;
+}
+
 .sys-item {
   font-size: 0.75rem;
   color: #666;
