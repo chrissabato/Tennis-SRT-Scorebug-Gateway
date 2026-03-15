@@ -88,7 +88,7 @@ git pull && pm2 restart tennis-gateway
 
 ## Web UI
 
-Access at `https://vultr.chrissabato.dev`
+Access at `https://your-domain` if TLS is configured, or `http://server-ip:3000` if running without a cert.
 
 **Settings (top bar):**
 - **Scorebug URL** — per-court scorebug endpoint (`{court}` is substituted)
