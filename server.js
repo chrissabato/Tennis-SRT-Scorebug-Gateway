@@ -23,6 +23,21 @@ const CONFIG = {
   teamBugUrl: process.env.TEAM_BUG_URL || '',
 };
 
+const API_KEY = process.env.API_KEY || '';
+
+// Strict SRT URL validation — prevents file://, http://, network scanning, etc.
+const SRT_URL_RE = /^srt:\/\/[a-zA-Z0-9._-]*:\d{1,5}(\?[a-zA-Z0-9=&._~-]*)?$/;
+function isValidSrtUrl(url) {
+  return typeof url === 'string' && SRT_URL_RE.test(url);
+}
+
+function requireAuth(req, res, next) {
+  if (!API_KEY) return next(); // no key configured = open (dev mode)
+  const auth = req.headers['x-api-key'];
+  if (auth !== API_KEY) return res.status(401).json({ error: 'Unauthorized' });
+  next();
+}
+
 const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -96,19 +111,19 @@ wss.on('connection', (ws) => {
 
 // Config endpoint
 app.get('/api/config', (req, res) => {
-  res.json(CONFIG);
+  res.json({ ...CONFIG, apiKey: API_KEY });
 });
 
 // REST API
-app.post('/api/stream/start', async (req, res) => {
+app.post('/api/stream/start', requireAuth, async (req, res) => {
   const { matchIndex, srtInput, srtOutput, bugUrl, bitrate, teamBugUrl } = req.body;
   const idx = parseInt(matchIndex, 10);
 
   if (isNaN(idx) || idx < 0 || idx >= NUM_STREAMS) {
     return res.status(400).json({ error: 'Invalid matchIndex' });
   }
-  if (!srtInput || !srtOutput) {
-    return res.status(400).json({ error: 'srtInput and srtOutput required' });
+  if (!isValidSrtUrl(srtInput) || !isValidSrtUrl(srtOutput)) {
+    return res.status(400).json({ error: 'Invalid SRT URL' });
   }
 
   const mgr = streams.get(idx);
@@ -116,8 +131,7 @@ app.post('/api/stream/start', async (req, res) => {
   res.json({ ok: true, status: mgr.status });
 });
 
-
-app.post('/api/stream/stop', (req, res) => {
+app.post('/api/stream/stop', requireAuth, (req, res) => {
   const { matchIndex } = req.body;
   const idx = parseInt(matchIndex, 10);
 

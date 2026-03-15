@@ -7,12 +7,14 @@
   const DEFAULT_BITRATE = 8000;
   let DEFAULT_BUG_URL = '';
   let DEFAULT_TEAM_BUG_URL = '';
+  let _apiKey = '';
 
   const scorebugUrlEl = document.getElementById('scorebug-url');
   const teamBugUrlEl  = document.getElementById('teambug-url');
 
   // Fetch server config (URLs stored in /etc/tennis-env, not in the public repo)
   fetch('/api/config').then(r => r.json()).then(cfg => {
+    _apiKey              = cfg.apiKey       || '';
     DEFAULT_BUG_URL      = cfg.scorebugUrl  || '';
     DEFAULT_TEAM_BUG_URL = cfg.teamBugUrl   || '';
     scorebugUrlEl.placeholder = DEFAULT_BUG_URL;
@@ -352,7 +354,7 @@
     try {
       const res = await fetch('/api/stream/start', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-api-key': _apiKey },
         body: JSON.stringify({ matchIndex: i, srtInput, srtOutput, bugUrl: getBugUrl(i + 1), bitrate: parseInt(bitrateEl.value, 10) || DEFAULT_BITRATE, teamBugUrl: getTeamBugUrl() }),
       });
       const data = await res.json();
@@ -366,7 +368,7 @@
     try {
       const res = await fetch('/api/stream/stop', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-api-key': _apiKey },
         body: JSON.stringify({ matchIndex: i }),
       });
       const data = await res.json();
