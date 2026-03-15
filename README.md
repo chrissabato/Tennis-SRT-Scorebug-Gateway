@@ -4,10 +4,10 @@ Manages up to 6 simultaneous SRT video restreams for live tennis tournament broa
 
 ## What it does
 
-- Receives SRT video from 6 court cameras (listener mode, ports 5001–5006)
+- Receives SRT video from 6 court cameras (ports 5001–5006, listener or caller mode)
 - Fetches live scorebug images (JPEG) from a web endpoint every second
 - Overlays the scorebug onto the video using FFmpeg + NVIDIA NVENC hardware encoding
-- Outputs SRT streams (listener mode, ports 6001–6006)
+- Outputs SRT streams (ports 6001–6006, listener or caller mode)
 - Optionally overlays a team scorebug (top-left corner, same URL for all courts)
 - Web UI for starting/stopping streams, configuring SRT settings, and monitoring status
 - Per-court FFmpeg log panel for real-time diagnostics
@@ -120,7 +120,7 @@ Both ufw and Vultr firewall group must have:
 Cameras should be configured with the server's **IP address** (`45.63.84.187`) rather than the domain name — some camera firmware does not reliably resolve DNS for SRT connections.
 
 Default SRT settings:
-- Mode: listener (both in and out)
+- Mode: listener (default, configurable per stream)
 - Input ports: 5001–5006 (one per court)
 - Output ports: 6001–6006 (one per court)
 - Latency: 500ms
