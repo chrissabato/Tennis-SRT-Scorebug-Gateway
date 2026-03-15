@@ -63,6 +63,8 @@ chmod 600 /etc/ssl/tennis.key
 cat > /etc/tennis-env << 'EOF'
 DOMAIN=your-domain.com
 EMAIL=your@email.com
+BASIC_AUTH_USER=admin
+BASIC_AUTH_PASS=your-password
 API_KEY=your-secret-key
 SCOREBUG_URL=https://your-domain/scorebug.php?court={court}
 TEAM_BUG_URL=https://your-domain/scorebug-team.php

@@ -61,6 +61,18 @@ ufw --force enable
 CERT=/etc/ssl/tennis.crt
 KEY=/etc/ssl/tennis.key
 
+# Basic auth
+HTPASSWD_FILE=/etc/nginx/.htpasswd
+if [ -n "$BASIC_AUTH_USER" ] && [ -n "$BASIC_AUTH_PASS" ]; then
+  apt-get install -y apache2-utils
+  htpasswd -cb "$HTPASSWD_FILE" "$BASIC_AUTH_USER" "$BASIC_AUTH_PASS"
+  AUTH_BLOCK="auth_basic \"Tennis Gateway\"; auth_basic_user_file $HTPASSWD_FILE;"
+  echo "--- Basic auth configured for user: $BASIC_AUTH_USER"
+else
+  AUTH_BLOCK=""
+  echo "--- No basic auth configured (BASIC_AUTH_USER/BASIC_AUTH_PASS not set)"
+fi
+
 if [ -f "$CERT" ] && [ -f "$KEY" ]; then
   echo "--- Configuring nginx with provided TLS cert..."
   apt-get install -y nginx
@@ -76,6 +88,7 @@ server {
     server_name $DOMAIN;
     ssl_certificate     $CERT;
     ssl_certificate_key $KEY;
+    $AUTH_BLOCK
     location / {
         proxy_pass http://127.0.0.1:3000;
         proxy_http_version 1.1;
@@ -97,6 +110,7 @@ elif [ -n "$DOMAIN" ] && [ -n "$EMAIL" ]; then
 server {
     listen 80;
     server_name $DOMAIN;
+    $AUTH_BLOCK
     location / { proxy_pass http://127.0.0.1:3000; }
 }
 NGINX
