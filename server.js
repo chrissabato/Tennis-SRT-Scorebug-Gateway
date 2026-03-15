@@ -65,6 +65,19 @@ function onStreamStatusChange(matchIndex, status, error) {
   });
 }
 
+// Persistent settings
+const SETTINGS_FILE = path.join(__dirname, 'settings.json');
+
+function loadSettings() {
+  try { return JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8')); } catch (_) { return {}; }
+}
+
+function saveSettings(data) {
+  fs.writeFileSync(SETTINGS_FILE, JSON.stringify(data, null, 2));
+}
+
+let settings = loadSettings();
+
 // WebSocket connection handler
 wss.on('connection', (ws) => {
   // Send current stream statuses
@@ -77,6 +90,18 @@ wss.on('connection', (ws) => {
   if (latest) {
     ws.send(JSON.stringify({ type: 'score:data', matches: latest }));
   }
+
+  // Send persisted settings
+  ws.send(JSON.stringify({ type: 'settings:load', settings }));
+
+  ws.on('message', (data) => {
+    let msg;
+    try { msg = JSON.parse(data); } catch (_) { return; }
+    if (msg.type === 'settings:save') {
+      settings = msg.settings;
+      saveSettings(settings);
+    }
+  });
 });
 
 // Score poller events

@@ -39,6 +39,10 @@
   document.getElementById('reset-defaults').addEventListener('click', () => {
     if (!confirm('Reset all fields to defaults? This cannot be undone.')) return;
     localStorage.clear();
+    _pendingSettings = {};
+    if (_ws && _ws.readyState === WebSocket.OPEN) {
+      _ws.send(JSON.stringify({ type: 'settings:save', settings: {} }));
+    }
     location.reload();
   });
 
@@ -87,8 +91,45 @@
     return `srt://${hostPart}:${p}?mode=${m}${latParam}${sidParam}`;
   }
 
-  function save(key, val) { localStorage.setItem(key, val); }
+  let _ws = null; // set by connect()
+  let _pendingSettings = {};
+
+  function save(key, val) {
+    localStorage.setItem(key, val);
+    _pendingSettings[key] = val;
+    if (_ws && _ws.readyState === WebSocket.OPEN) {
+      _ws.send(JSON.stringify({ type: 'settings:save', settings: _pendingSettings }));
+    }
+  }
+
   function load(key, def = '') { return localStorage.getItem(key) ?? def; }
+
+  function applyServerSettings(s) {
+    for (const [key, val] of Object.entries(s)) {
+      localStorage.setItem(key, val);
+    }
+  }
+
+  function applySettingsToUI(s) {
+    if (s['scorebug-url'] !== undefined) scorebugUrlEl.value = s['scorebug-url'];
+    if (s['teambug-url']  !== undefined) teamBugUrlEl.value  = s['teambug-url'];
+    if (s['video-bitrate'] !== undefined) bitrateEl.value    = s['video-bitrate'];
+    for (let i = 0; i < NUM_STREAMS; i++) {
+      const p = panels[i];
+      if (!p) continue;
+      const f = p.fields;
+      if (s[`s${i}-in-host`]     !== undefined) f.inHost.value     = s[`s${i}-in-host`];
+      if (s[`s${i}-in-port`]     !== undefined) f.inPort.value     = s[`s${i}-in-port`];
+      if (s[`s${i}-in-mode`]     !== undefined) f.inMode.value     = s[`s${i}-in-mode`];
+      if (s[`s${i}-in-latency`]  !== undefined) f.inLatency.value  = s[`s${i}-in-latency`];
+      if (s[`s${i}-in-streamid`] !== undefined) f.inStreamid.value = s[`s${i}-in-streamid`];
+      if (s[`s${i}-out-host`]    !== undefined) f.outHost.value    = s[`s${i}-out-host`];
+      if (s[`s${i}-out-port`]    !== undefined) f.outPort.value    = s[`s${i}-out-port`];
+      if (s[`s${i}-out-mode`]    !== undefined) f.outMode.value    = s[`s${i}-out-mode`];
+      if (s[`s${i}-out-latency`] !== undefined) f.outLatency.value = s[`s${i}-out-latency`];
+      if (s[`s${i}-out-streamid`]!== undefined) f.outStreamid.value= s[`s${i}-out-streamid`];
+    }
+  }
 
   function buildPanel(i) {
     const el = document.createElement('div');
@@ -350,6 +391,7 @@
 
   function connect() {
     const ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}`);
+    _ws = ws;
 
     ws.addEventListener('open', () => {
       scoreStatusEl.textContent = 'Connected';
@@ -357,6 +399,7 @@
     });
 
     ws.addEventListener('close', () => {
+      _ws = null;
       scoreStatusEl.textContent = 'Disconnected — reconnecting...';
       scoreStatusEl.className = 'score-status err';
       setTimeout(connect, 3000);
@@ -368,7 +411,11 @@
       let msg;
       try { msg = JSON.parse(evt.data); } catch (_) { return; }
 
-      if (msg.type === 'score:data') {
+      if (msg.type === 'settings:load') {
+        applyServerSettings(msg.settings);
+        _pendingSettings = { ...msg.settings };
+        applySettingsToUI(msg.settings);
+      } else if (msg.type === 'score:data') {
         applyScoreData(msg.matches);
       } else if (msg.type === 'stream:status') {
         applyStatus(msg.matchIndex, msg.status, msg.signal, msg.error, msg.stderrTail);
