@@ -1,5 +1,7 @@
 # Tennis SRT Scorebug Gateway
 
+![Tennis SRT Scorebug Gateway](docs/screenshot.jpg)
+
 Manages up to 6 simultaneous SRT video restreams for live tennis tournament broadcasts. Each stream receives an SRT feed from a court camera, overlays a live scorebug, and outputs an SRT stream to a production switcher (e.g. vMix).
 
 ## What it does
