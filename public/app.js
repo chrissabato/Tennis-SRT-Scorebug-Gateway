@@ -75,8 +75,8 @@
     hostEl.value     = parsed.host;     save(`s${i}-${prefix}-host`,     parsed.host);
     portEl.value     = parsed.port;     save(`s${i}-${prefix}-port`,     parsed.port);
     modeEl.value     = parsed.mode;     save(`s${i}-${prefix}-mode`,     parsed.mode);
-    latencyEl.value  = parsed.latency;  save(`s${i}-${prefix}-latency`,  parsed.latency);
-    streamidEl.value = parsed.streamid; save(`s${i}-${prefix}-streamid`, parsed.streamid);
+    if (parsed.latency) { latencyEl.value = parsed.latency; save(`s${i}-${prefix}-latency`, parsed.latency); }
+    if (parsed.streamid) { streamidEl.value = parsed.streamid; save(`s${i}-${prefix}-streamid`, parsed.streamid); }
   }
 
   function buildSrtUrl(host, port, mode, latency, streamid) {
