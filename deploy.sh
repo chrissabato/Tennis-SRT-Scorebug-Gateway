@@ -8,8 +8,15 @@ EMAIL="${EMAIL:-}"
 
 echo "=== Tennis SRT Scorebug Gateway — Deploy ==="
 
-# Load config from /etc/tennis-env if present
-[ -f /etc/tennis-env ] && source /etc/tennis-env
+# Load config from /etc/tennis-env if present (parse manually to handle special chars in values)
+if [ -f /etc/tennis-env ]; then
+  while IFS='=' read -r key value; do
+    [[ "$key" =~ ^#.*$ || -z "$key" ]] && continue
+    value="${value#\"}" ; value="${value%\"}"
+    value="${value#\'}" ; value="${value%\'}"
+    export "$key=$value"
+  done < /etc/tennis-env
+fi
 DOMAIN="${DOMAIN:-}"
 EMAIL="${EMAIL:-}"
 
