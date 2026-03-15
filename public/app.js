@@ -18,8 +18,8 @@
     DEFAULT_TEAM_BUG_URL = cfg.teamBugUrl   || '';
     scorebugUrlEl.placeholder = DEFAULT_BUG_URL;
     teamBugUrlEl.placeholder  = DEFAULT_TEAM_BUG_URL;
-    if (!scorebugUrlEl.value) scorebugUrlEl.value = load('scorebug-url', '');
-    if (!teamBugUrlEl.value)  teamBugUrlEl.value  = load('teambug-url',  '');
+    if (!scorebugUrlEl.value) scorebugUrlEl.value = load('scorebug-url', DEFAULT_BUG_URL);
+    if (!teamBugUrlEl.value)  teamBugUrlEl.value  = load('teambug-url',  DEFAULT_TEAM_BUG_URL);
   }).catch(() => {});
 
   scorebugUrlEl.value = load('scorebug-url', '');
@@ -111,8 +111,8 @@
   }
 
   function applySettingsToUI(s) {
-    if (s['scorebug-url'] !== undefined) scorebugUrlEl.value = s['scorebug-url'];
-    if (s['teambug-url']  !== undefined) teamBugUrlEl.value  = s['teambug-url'];
+    if (s['scorebug-url']) scorebugUrlEl.value = s['scorebug-url'];
+    if (s['teambug-url'])  teamBugUrlEl.value  = s['teambug-url'];
     if (s['video-bitrate'] !== undefined) bitrateEl.value    = s['video-bitrate'];
     for (let i = 0; i < NUM_STREAMS; i++) {
       const p = panels[i];
