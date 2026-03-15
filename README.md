@@ -117,7 +117,7 @@ Both ufw and Vultr firewall group must have:
 
 ## SRT Configuration
 
-Cameras should be configured with the server's **IP address** (`45.63.84.187`) rather than the domain name — some camera firmware does not reliably resolve DNS for SRT connections.
+Cameras can be configured with either the server's IP address or domain name. Note that some camera firmware does not reliably resolve DNS for SRT connections — use the IP address if the domain does not work.
 
 Default SRT settings:
 - Mode: listener (default, configurable per stream)
