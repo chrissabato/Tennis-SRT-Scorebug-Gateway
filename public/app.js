@@ -5,15 +5,27 @@
   const grid = document.getElementById('stream-grid');
   const scoreStatusEl = document.getElementById('score-status');
 
-  const DEFAULT_BUG_URL = 'https://tennis.chrissabato.com/broadcast/scorebug.php?court={court}';
   const DEFAULT_BITRATE = 8000;
+  let DEFAULT_BUG_URL = '';
+  let DEFAULT_TEAM_BUG_URL = '';
+
   const scorebugUrlEl = document.getElementById('scorebug-url');
-  scorebugUrlEl.value = load('scorebug-url', DEFAULT_BUG_URL);
+  const teamBugUrlEl  = document.getElementById('teambug-url');
+
+  // Fetch server config (URLs stored in /etc/tennis-env, not in the public repo)
+  fetch('/api/config').then(r => r.json()).then(cfg => {
+    DEFAULT_BUG_URL      = cfg.scorebugUrl  || '';
+    DEFAULT_TEAM_BUG_URL = cfg.teamBugUrl   || '';
+    scorebugUrlEl.placeholder = DEFAULT_BUG_URL;
+    teamBugUrlEl.placeholder  = DEFAULT_TEAM_BUG_URL;
+    if (!scorebugUrlEl.value) scorebugUrlEl.value = load('scorebug-url', '');
+    if (!teamBugUrlEl.value)  teamBugUrlEl.value  = load('teambug-url',  '');
+  }).catch(() => {});
+
+  scorebugUrlEl.value = load('scorebug-url', '');
   scorebugUrlEl.addEventListener('input', () => save('scorebug-url', scorebugUrlEl.value));
 
-  const DEFAULT_TEAM_BUG_URL = 'https://tennis.chrissabato.com/broadcast/scorebug-team.php';
-  const teamBugUrlEl = document.getElementById('teambug-url');
-  teamBugUrlEl.value = load('teambug-url', DEFAULT_TEAM_BUG_URL);
+  teamBugUrlEl.value = load('teambug-url', '');
   teamBugUrlEl.addEventListener('input', () => save('teambug-url', teamBugUrlEl.value));
 
   function getTeamBugUrl() {

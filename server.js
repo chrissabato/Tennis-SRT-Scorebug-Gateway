@@ -10,6 +10,20 @@ const StreamManager = require('./src/stream-manager');
 const PORT = 3000;
 const NUM_STREAMS = 6;
 
+// Load environment from /etc/tennis-env if present
+if (fs.existsSync('/etc/tennis-env')) {
+  const envLines = fs.readFileSync('/etc/tennis-env', 'utf8').split('\n');
+  for (const line of envLines) {
+    const m = line.match(/^([^=]+)=(.*)$/);
+    if (m) process.env[m[1].trim()] = m[2].trim().replace(/^["']|["']$/g, '');
+  }
+}
+
+const CONFIG = {
+  scorebugUrl: process.env.SCOREBUG_URL || '',
+  teamBugUrl: process.env.TEAM_BUG_URL || '',
+};
+
 const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -76,6 +90,11 @@ poller.on('data', (data) => {
 
 poller.on('error', () => {
   broadcast({ type: 'score:error' });
+});
+
+// Config endpoint
+app.get('/api/config', (req, res) => {
+  res.json(CONFIG);
 });
 
 // REST API

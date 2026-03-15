@@ -12,7 +12,7 @@ class StreamManager {
     this.fifoPath     = `/tmp/tennis-scorebug-${matchIndex}.fifo`;
     this.teamFifoPath = `/tmp/tennis-teambug-${matchIndex}.fifo`;
     this.courtNumber = matchIndex + 1;
-    this.bugUrl     = `https://tennis.chrissabato.com/broadcast/scorebug.php?court=${this.courtNumber}`;
+    this.bugUrl     = '';
     this.teamBugUrl = null;
 
     this.status = 'idle';
