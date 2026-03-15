@@ -127,7 +127,7 @@ Default SRT settings:
 - Mode: listener (default, configurable per stream)
 - Input ports: 5001–5006 (one per court)
 - Output ports: 6001–6006 (one per court)
-- Latency: 500ms
+- Latency: 2000ms
 
 ## PM2
 

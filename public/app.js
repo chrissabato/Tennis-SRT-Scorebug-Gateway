@@ -233,12 +233,12 @@
     fields.inHost.value      = load(`s${i}-in-host`);
     fields.inPort.value      = load(`s${i}-in-port`,     String(5001 + i));
     fields.inMode.value      = load(`s${i}-in-mode`,     'listener');
-    fields.inLatency.value   = load(`s${i}-in-latency`,  '500');
+    fields.inLatency.value   = load(`s${i}-in-latency`,  '2000');
     fields.inStreamid.value  = load(`s${i}-in-streamid`);
     fields.outHost.value     = load(`s${i}-out-host`);
     fields.outPort.value     = load(`s${i}-out-port`,    String(6001 + i));
     fields.outMode.value     = load(`s${i}-out-mode`,    'listener');
-    fields.outLatency.value  = load(`s${i}-out-latency`, '500');
+    fields.outLatency.value  = load(`s${i}-out-latency`, '2000');
     fields.outStreamid.value = load(`s${i}-out-streamid`);
 
     // Persist + auto-parse full SRT URLs pasted into host fields
