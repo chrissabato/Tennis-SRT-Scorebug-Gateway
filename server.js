@@ -4,7 +4,6 @@ const WebSocket = require('ws');
 const path = require('path');
 const fs = require('fs');
 
-const ScorePoller = require('./src/score-poller');
 const StreamManager = require('./src/stream-manager');
 
 const PORT = 3000;
@@ -30,9 +29,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
-
-// Score poller
-const poller = new ScorePoller();
 
 // Stream managers
 const streams = new Map();
@@ -85,12 +81,6 @@ wss.on('connection', (ws) => {
     ws.send(JSON.stringify({ type: 'stream:status', ...mgr.getState() }));
   }
 
-  // Send latest score data if available
-  const latest = poller.getLatest();
-  if (latest) {
-    ws.send(JSON.stringify({ type: 'score:data', matches: latest }));
-  }
-
   // Send persisted settings
   ws.send(JSON.stringify({ type: 'settings:load', settings }));
 
@@ -102,19 +92,6 @@ wss.on('connection', (ws) => {
       saveSettings(settings);
     }
   });
-});
-
-// Score poller events
-poller.on('data', (data) => {
-  broadcast({ type: 'score:data', matches: data });
-  for (const [i, mgr] of streams) {
-    const matchData = Array.isArray(data) ? data[i] : null;
-    if (matchData) mgr.updateMatchData(matchData);
-  }
-});
-
-poller.on('error', () => {
-  broadcast({ type: 'score:error' });
 });
 
 // Config endpoint
@@ -212,7 +189,6 @@ setInterval(() => {
 // Graceful shutdown
 function shutdown() {
   console.log('\nShutting down...');
-  poller.stop();
   for (const [, mgr] of streams) {
     mgr.stop();
   }
@@ -223,7 +199,6 @@ process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
 
 // Start
-poller.start();
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`Tennis Restream Manager running at http://localhost:${PORT}`);
 });

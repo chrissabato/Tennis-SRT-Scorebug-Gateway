@@ -3,7 +3,6 @@
 
   const NUM_STREAMS = 6;
   const grid = document.getElementById('stream-grid');
-  const scoreStatusEl = document.getElementById('score-status');
 
   const DEFAULT_BITRATE = 8000;
   let DEFAULT_BUG_URL = '';
@@ -139,8 +138,6 @@
         <span class="panel-title">Court ${i + 1}</span>
         <span class="badge badge-idle" id="badge-${i}"><span class="signal-dot" id="signal-${i}"></span>Idle</span>
       </div>
-      <div class="match-preview" id="preview-${i}">—</div>
-
       <div class="srt-group">
         <div class="srt-group-label">Ingest</div>
         <div class="srt-row">
@@ -277,7 +274,6 @@
     const panel = {
       el,
       badge:         el.querySelector(`#badge-${i}`),
-      preview:       el.querySelector(`#preview-${i}`),
       scorebugImg:   el.querySelector(`#scorebug-${i}`),
       signalDot:     el.querySelector(`#signal-${i}`),
       fields,
@@ -343,15 +339,6 @@
     }
   }
 
-  function applyScoreData(matches) {
-    if (!Array.isArray(matches)) return;
-    matches.forEach((m, i) => {
-      if (!panels[i]) return;
-      panels[i].preview.textContent = '';
-    });
-    scoreStatusEl.textContent = 'Score data live';
-    scoreStatusEl.className = 'score-status ok';
-  }
 
   async function startStream(i) {
     const p = panels[i];
@@ -393,15 +380,8 @@
     const ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}`);
     _ws = ws;
 
-    ws.addEventListener('open', () => {
-      scoreStatusEl.textContent = 'Connected';
-      scoreStatusEl.className = 'score-status ok';
-    });
-
     ws.addEventListener('close', () => {
       _ws = null;
-      scoreStatusEl.textContent = 'Disconnected — reconnecting...';
-      scoreStatusEl.className = 'score-status err';
       setTimeout(connect, 3000);
     });
 
@@ -415,8 +395,6 @@
         applyServerSettings(msg.settings);
         _pendingSettings = { ...msg.settings };
         applySettingsToUI(msg.settings);
-      } else if (msg.type === 'score:data') {
-        applyScoreData(msg.matches);
       } else if (msg.type === 'stream:status') {
         applyStatus(msg.matchIndex, msg.status, msg.signal, msg.error, msg.stderrTail);
       } else if (msg.type === 'stream:log') {
@@ -428,9 +406,6 @@
           }
           p.logEl.scrollTop = p.logEl.scrollHeight;
         }
-      } else if (msg.type === 'score:error') {
-        scoreStatusEl.textContent = 'Score API error — using cached data';
-        scoreStatusEl.className = 'score-status err';
       } else if (msg.type === 'sys:stats') {
         const cpuEl   = document.getElementById('cpu-val');
         const memEl   = document.getElementById('mem-val');
