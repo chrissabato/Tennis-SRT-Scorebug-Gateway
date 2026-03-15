@@ -119,8 +119,8 @@ Both ufw and Vultr firewall group must have:
 | 22 | TCP | SSH |
 | 80 | TCP | HTTP (Let's Encrypt renewal) |
 | 443 | TCP | HTTPS (web UI) |
-| 5000–5010 | UDP | SRT input |
-| 6000–6010 | UDP | SRT output |
+| 5001–5006 | UDP | SRT input (one per court) |
+| 6001–6006 | UDP | SRT output (one per court) |
 
 ## SRT Configuration
 
