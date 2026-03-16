@@ -65,7 +65,6 @@ DOMAIN=your-domain.com
 EMAIL=your@email.com
 BASIC_AUTH_USER=admin
 BASIC_AUTH_PASS=your-password
-API_KEY=your-secret-key
 SCOREBUG_URL=https://your-domain/scorebug.php?court={court}
 TEAM_BUG_URL=https://your-domain/scorebug-team.php
 DEPLOY_WEBHOOK_URL=https://chat.googleapis.com/v1/spaces/.../messages?key=...
