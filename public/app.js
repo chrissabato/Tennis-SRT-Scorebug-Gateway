@@ -13,6 +13,12 @@
   const teamBugUrlEl  = document.getElementById('teambug-url');
 
   // Fetch server config (URLs stored in /etc/tennis-env, not in the public repo)
+  const notificationsField  = document.getElementById('notifications-field');
+  const notificationsToggle = document.getElementById('notifications-toggle');
+  notificationsToggle.addEventListener('change', () => {
+    save('notificationsEnabled', notificationsToggle.checked);
+  });
+
   fetch('/api/config').then(r => r.json()).then(cfg => {
     _apiKey              = cfg.apiKey       || '';
     DEFAULT_BUG_URL      = cfg.scorebugUrl  || '';
@@ -26,6 +32,10 @@
     teamBugUrlEl.placeholder  = DEFAULT_TEAM_BUG_URL;
     if (!scorebugUrlEl.value) scorebugUrlEl.value = load('scorebug-url', DEFAULT_BUG_URL);
     if (!teamBugUrlEl.value)  teamBugUrlEl.value  = load('teambug-url',  DEFAULT_TEAM_BUG_URL);
+    if (cfg.hasWebhook) {
+      notificationsField.style.display = '';
+      notificationsToggle.checked = load('notificationsEnabled', 'false') === 'true';
+    }
   }).catch(() => {});
 
   scorebugUrlEl.value = load('scorebug-url', '');
@@ -119,6 +129,7 @@
   function applySettingsToUI(s) {
     if (s['scorebug-url']) scorebugUrlEl.value = s['scorebug-url'];
     if (s['teambug-url'])  teamBugUrlEl.value  = s['teambug-url'];
+    if (s['notificationsEnabled'] !== undefined) notificationsToggle.checked = !!s['notificationsEnabled'];
     if (s['video-bitrate'] !== undefined) bitrateEl.value    = s['video-bitrate'];
     for (let i = 0; i < NUM_STREAMS; i++) {
       const p = panels[i];

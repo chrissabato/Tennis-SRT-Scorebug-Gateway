@@ -5,6 +5,7 @@ const path = require('path');
 const fs = require('fs');
 
 const StreamManager = require('./src/stream-manager');
+const Notifier = require('./src/notifier');
 
 const PORT = 3000;
 const NUM_STREAMS = 6;
@@ -24,6 +25,7 @@ const CONFIG = {
 };
 
 const API_KEY = process.env.API_KEY || '';
+const notifier = new Notifier(process.env.MSG_WEBHOOK_URL);
 
 // Strict SRT URL validation — prevents file://, http://, network scanning, etc.
 const SRT_URL_RE = /^srt:\/\/[a-zA-Z0-9._-]*:\d{1,5}(\?[a-zA-Z0-9=&._~-]*)?$/;
@@ -74,6 +76,9 @@ function onStreamStatusChange(matchIndex, status, error) {
     error,
     stderrTail: mgr ? mgr.stderrTail : '',
   });
+  if (status === 'error' && error) {
+    notifier.send(`⚠️ Court ${matchIndex + 1} error: ${error}`);
+  }
 }
 
 // Persistent settings
@@ -88,6 +93,7 @@ function saveSettings(data) {
 }
 
 let settings = loadSettings();
+notifier.setEnabled(!!settings.notificationsEnabled);
 
 // WebSocket connection handler
 wss.on('connection', (ws) => {
@@ -105,13 +111,14 @@ wss.on('connection', (ws) => {
     if (msg.type === 'settings:save') {
       settings = msg.settings;
       saveSettings(settings);
+      notifier.setEnabled(!!settings.notificationsEnabled);
     }
   });
 });
 
 // Config endpoint
 app.get('/api/config', (req, res) => {
-  res.json({ ...CONFIG, apiKey: API_KEY });
+  res.json({ ...CONFIG, apiKey: API_KEY, hasWebhook: notifier.isConfigured() });
 });
 
 // REST API
@@ -199,6 +206,21 @@ setInterval(() => {
     });
   } catch (_) {}
 }, 3000);
+
+// 30-minute heartbeat notification
+setInterval(() => {
+  if (!notifier.isConfigured()) return;
+  try {
+    const cpu = getCpuPercent();
+    const mem = getMemInfo();
+    const gpu = getGpuInfo();
+    const liveCount = [...streams.values()].filter(m => m.status === 'live').length;
+    let text = `🎾 Tennis Gateway heartbeat\nCPU: ${cpu}%  MEM: ${mem.usedMb}/${mem.totalMb} MB (${mem.percent}%)`;
+    if (gpu) text += `  GPU: ${gpu.gpuPercent}%  GMEM: ${gpu.memUsed}/${gpu.memTotal} MB`;
+    text += `\nActive streams: ${liveCount}/${NUM_STREAMS}`;
+    notifier.send(text);
+  } catch (_) {}
+}, 30 * 60 * 1000);
 
 // Graceful shutdown
 function shutdown() {

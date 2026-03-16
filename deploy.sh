@@ -148,8 +148,8 @@ fi
 echo "    Logs: pm2 logs tennis-gateway"
 
 # Notify via Google Chat webhook if configured
-if [ -n "$DEPLOY_WEBHOOK_URL" ]; then
+if [ -n "$MSG_WEBHOOK_URL" ]; then
   curl -s -X POST -H 'Content-Type: application/json' \
-    -d "{\"text\": \"Tennis gateway deploy complete on $DOMAIN\"}" \
-    "$DEPLOY_WEBHOOK_URL" > /dev/null
+    -d "{\"text\": \"🎾 Tennis gateway deploy complete on ${DOMAIN:-$(hostname -I | awk '{print $1}')}\"}" \
+    "$MSG_WEBHOOK_URL" > /dev/null
 fi

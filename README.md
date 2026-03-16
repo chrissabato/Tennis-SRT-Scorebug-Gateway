@@ -67,7 +67,7 @@ BASIC_AUTH_USER=admin
 BASIC_AUTH_PASS=your-password
 SCOREBUG_URL=https://your-domain/scorebug.php?court={court}
 TEAM_BUG_URL=https://your-domain/scorebug-team.php
-DEPLOY_WEBHOOK_URL=https://chat.googleapis.com/v1/spaces/.../messages?key=...
+MSG_WEBHOOK_URL=https://chat.googleapis.com/v1/spaces/.../messages?key=...
 EOF
 
 # Run deploy detached so cloud-init doesn't kill it
