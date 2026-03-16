@@ -20,6 +20,14 @@ fi
 DOMAIN="${DOMAIN:-}"
 EMAIL="${EMAIL:-}"
 
+# Generate API key if not set
+if [ -z "$API_KEY" ]; then
+  API_KEY=$(openssl rand -hex 16)
+  echo "API_KEY=$API_KEY" >> /etc/tennis-env
+  export API_KEY
+  echo "--- Generated API_KEY and saved to /etc/tennis-env"
+fi
+
 # System packages
 echo "--- Installing system dependencies..."
 apt-get update -qq
