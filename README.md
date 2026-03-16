@@ -121,6 +121,22 @@ Both ufw and Vultr firewall group must have:
 | 5001–5006 | UDP | SRT input (one per court) |
 | 6001–6006 | UDP | SRT output (one per court) |
 
+## Notifications
+
+If `MSG_WEBHOOK_URL` is set in `/etc/tennis-env`, the gateway will send messages to a Google Chat space (or any compatible webhook):
+
+- **Deploy complete** — sent when `deploy.sh` finishes
+- **Stream error** — sent immediately when a court stream hits an error, including the error message
+- **Heartbeat** — sent every 30 minutes with CPU, memory, GPU usage, and active stream count
+
+A **Notifications** toggle appears in the settings bar. It is only visible if the server has a webhook configured. The toggle state is synced across browsers.
+
+To add a webhook to an existing instance:
+```bash
+echo 'MSG_WEBHOOK_URL=https://chat.googleapis.com/v1/spaces/.../messages?key=...' >> /etc/tennis-env
+pm2 restart tennis-gateway
+```
+
 ## SRT Configuration
 
 Cameras can be configured with either the server's IP address or domain name. Note that some camera firmware does not reliably resolve DNS for SRT connections — use the IP address if the domain does not work.
