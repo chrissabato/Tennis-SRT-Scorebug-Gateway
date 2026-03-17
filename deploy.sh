@@ -73,6 +73,7 @@ KEY=/etc/ssl/tennis.key
 HTPASSWD_FILE=/etc/nginx/.htpasswd
 if [ -n "$BASIC_AUTH_USER" ] && [ -n "$BASIC_AUTH_PASS" ]; then
   apt-get install -y apache2-utils
+  mkdir -p /etc/nginx
   htpasswd -cb "$HTPASSWD_FILE" "$BASIC_AUTH_USER" "$BASIC_AUTH_PASS"
   AUTH_BLOCK="auth_basic \"Tennis Gateway\"; auth_basic_user_file $HTPASSWD_FILE;"
   echo "--- Basic auth configured for user: $BASIC_AUTH_USER"
