@@ -227,6 +227,7 @@
       <div class="error-area" id="error-${i}"></div>
       <div class="log-section" id="log-section-${i}">
         <button class="log-toggle" id="log-toggle-${i}">▶ Log</button>
+        <button class="log-copy" id="log-copy-${i}" title="Copy log to clipboard">Copy</button>
         <pre class="log-area" id="log-${i}" style="display:none"></pre>
       </div>
     `;
@@ -282,11 +283,19 @@
     stopBtn.addEventListener('click',  () => stopStream(i));
 
     const logToggle = el.querySelector(`#log-toggle-${i}`);
+    const logCopy   = el.querySelector(`#log-copy-${i}`);
     const logEl     = el.querySelector(`#log-${i}`);
     logToggle.addEventListener('click', () => {
       const open = logEl.style.display === 'none';
       logEl.style.display = open ? 'block' : 'none';
       logToggle.textContent = (open ? '▼' : '▶') + ' Log';
+    });
+    logCopy.addEventListener('click', () => {
+      navigator.clipboard.writeText(logEl.textContent).then(() => {
+        const orig = logCopy.textContent;
+        logCopy.textContent = 'Copied!';
+        setTimeout(() => { logCopy.textContent = orig; }, 1500);
+      });
     });
 
     const panel = {

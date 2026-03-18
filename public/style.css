@@ -303,6 +303,18 @@ button:disabled { opacity: 0.35; cursor: not-allowed; }
 }
 .log-toggle:hover { color: #ccc; border-color: #666; }
 
+.log-copy {
+  background: none;
+  border: 1px solid #444;
+  color: #888;
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  margin-left: 4px;
+}
+.log-copy:hover { color: #ccc; border-color: #666; }
+
 .log-area {
   margin-top: 4px;
   background: #111;
